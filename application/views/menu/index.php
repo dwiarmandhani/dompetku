@@ -20,17 +20,15 @@
                 <tbody>
                     <?php $i = 1; ?>
                     <?php foreach ($menu as $m) : ?>
-                    <tr>
-                        <th scope="row"><?= $i; ?></th>
-                        <td><?= $m['menu']; ?></td>
-                        <td>
-                            <a href="" class="badge badge-success">edit</a>
-                            <a href="<?php echo base_url('menu/deletemenu'); ?>/<?= $m['id']; ?>"
-                                onclick="return confirm('Are you sure you want to delete this item?');"
-                                class="badge badge-danger">delete</a>
-                        </td>
-                    </tr>
-                    <?php $i++; ?>
+                        <tr>
+                            <th scope="row"><?= $i; ?></th>
+                            <td><?= $m['menu']; ?></td>
+                            <td>
+                                <a href="" class="badge badge-success" data-toggle="modal" data-target="#editMenuModal">edit</a>
+                                <a href="<?php echo base_url('menu/deletemenu'); ?>/<?= $m['id']; ?>" onclick="return confirm('Are you sure you want to delete this item?');" class="badge badge-danger">delete</a>
+                            </td>
+                        </tr>
+                        <?php $i++; ?>
                     <?php endforeach; ?>
                 </tbody>
             </table>
@@ -65,6 +63,31 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                     <button type="submit" class="btn btn-primary">Add</button>
+                </div>
+            </form>
+
+        </div>
+    </div>
+</div>
+<!-- Modal Edit -->
+<div class="modal fade" id="editMenuModal" tabindex="-1" aria-labelledby="editMenuModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editMenuModalLabel">Edit Menu</h5>
+
+            </div>
+            <form action="<?= base_url('menu/editmenu'); ?>" method="post">
+                <div class="modal-body">
+
+                    <div class="form-group">
+                        <input type="text" class="form-control" value="" id="menu" name="menu" placeholder="Menu Name...">
+                    </div>
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Edit</button>
                 </div>
             </form>
 
