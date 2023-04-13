@@ -20,8 +20,7 @@
 </a>
 
 <!-- Logout Modal-->
-<div class="modal fade" id="logoutModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
-    aria-hidden="true">
+<div class="modal fade" id="logoutModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
@@ -48,7 +47,24 @@
 
 <!-- Custom scripts for all pages-->
 <script src="<?php echo base_url('assets'); ?>/js/sb-admin-2.min.js"></script>
+<script>
+    $('.form-check-input').on('click', function() {
+        const menuId = $(this).data('menu');
+        const roleId = $(this).data('role');
 
+        $.ajax({
+            url: "<?= base_url('admin/changeaccess'); ?>",
+            type: "POST",
+            data: {
+                menuId: menuId,
+                roleId: roleId
+            },
+            success: function() {
+                document.location.href = "<?= base_url('admin/roleaccess/'); ?>" + roleId;
+            }
+        });
+    });
+</script>
 </body>
 
 </html>

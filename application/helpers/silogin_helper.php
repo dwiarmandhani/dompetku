@@ -20,3 +20,14 @@ function is_logged_in()
         }
     }
 }
+
+function check_access($role_id, $menu_id)
+{
+    $silogin = get_instance();
+
+    $result = $silogin->db->get_where('user_access_menu', ['role_id' => $role_id, 'menu_id' => $menu_id]);
+
+    if ($result->num_rows() > 0) {
+        return "checked='checked'";
+    }
+}
