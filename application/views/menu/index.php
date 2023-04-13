@@ -24,7 +24,7 @@
                             <th scope="row"><?= $i; ?></th>
                             <td><?= $m['menu']; ?></td>
                             <td>
-                                <a href="" class="badge badge-success" data-toggle="modal" data-target="#editMenuModal">edit</a>
+                                <a href="" class="badge badge-success editMenu" data-toggle="modal" data-target="#editMenuModal" data-id="<?php echo $m['id']; ?>">edit</a>
                                 <a href="<?php echo base_url('menu/deletemenu'); ?>/<?= $m['id']; ?>" onclick="return confirm('Are you sure you want to delete this item?');" class="badge badge-danger">delete</a>
                             </td>
                         </tr>
@@ -80,8 +80,9 @@
             <form action="<?= base_url('menu/editmenu'); ?>" method="post">
                 <div class="modal-body">
 
+                    <input type="hidden" class="form-control" id="menuId" name="menu_id" placeholder="Menu Name...">
                     <div class="form-group">
-                        <input type="text" class="form-control" value="" id="menu" name="menu" placeholder="Menu Name...">
+                        <input type="text" class="form-control" id="menuname" name="menu" placeholder="Menu Name...">
                     </div>
 
                 </div>

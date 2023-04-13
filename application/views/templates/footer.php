@@ -48,7 +48,7 @@
 <!-- Custom scripts for all pages-->
 <script src="<?php echo base_url('assets'); ?>/js/sb-admin-2.min.js"></script>
 <script>
-    $('.form-check-input').on('click', function() {
+    $('.checklistRole').on('click', function() {
         const menuId = $(this).data('menu');
         const roleId = $(this).data('role');
 
@@ -61,6 +61,58 @@
             },
             success: function() {
                 document.location.href = "<?= base_url('admin/roleaccess/'); ?>" + roleId;
+            }
+        });
+    });
+
+    $('.editMenu').on('click', function() {
+        const menuId = $(this).data('id');
+
+        $.ajax({
+            url: "<?php echo base_url('menu/openedit/') ?>" + menuId,
+            type: "GET",
+            data: {
+                id: menuId
+            },
+            dataType: "json",
+            success: function(data) {
+                // $('#editMenuModal').modal('show');
+                $('#menuId').val(data.menu.id);
+                $('#menuname').val(data.menu.menu);
+            }
+        })
+    });
+    $('.editSubMenu').on('click', function() {
+        const subMenuId = $(this).data('id');
+        $.ajax({
+            url: "<?php echo base_url('menu/opensubmenuedit/') ?>" + subMenuId,
+            type: "GET",
+            data: {
+                id: subMenuId
+            },
+            dataType: "json",
+            success: function(data) {
+                // $('#editMenuModal').modal('show');
+                $('#subMenuId').val(data.submenu.id);
+                $('#judul').val(data.submenu.title);
+                $('#menu_select_id').val(data.submenu.menu_id);
+                $('#sub_menu_url').val(data.submenu.url);
+                $('#sub_menu_icon').val(data.submenu.icon);
+
+                if (parseInt(data.submenu.is_active) === 1) {
+                    $('#sub_menu_active').val(data.submenu.is_active);
+                    $('#sub_menu_active').attr('checked', 'true');
+                } else if (parseInt(data.submenu.is_active) === 0) {
+                    $('#sub_menu_active').val(0);
+                    $('#sub_menu_active').removeAttr('checked');
+                }
+            }
+        });
+        $('#sub_menu_active').on('change', function() {
+            if ($(this).is(':checked')) {
+                $(this).val(1);
+            } else {
+                $(this).val(0);
             }
         });
     });

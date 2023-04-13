@@ -81,4 +81,60 @@ class Menu extends CI_Controller
         $this->db->delete('user_sub_menu');
         redirect('menu/submenu');
     }
+
+    public function openedit($id)
+    {
+        $data['menu'] = $this->db->get_where('user_menu', ['id' => $id])->row();
+        echo json_encode($data);
+    }
+    public function editmenu()
+    {
+        $this->form_validation->set_rules('menu', 'Menu', 'required');
+
+        if ($this->form_validation->run() == false) {
+            $this->session->set_flashdata('message', '<div class="alert alert-danger" role="alert">Menu edited failed!</div>');
+
+            redirect('menu');
+        } else {
+            $id = $this->input->post('menu_id');
+            $data = array(
+                'menu' => $this->input->post('menu')
+            );
+            $this->db->where('id', $id);
+            $this->db->update('user_menu', $data);
+            $this->session->set_flashdata('message', '<div class="alert alert-success" role="alert">Menu has been edited</div>');
+            redirect('menu');
+        }
+    }
+    public function opensubmenuedit($id)
+    {
+        $menu['submenu'] = $this->db->get_where('user_sub_menu', ['id' => $id])->row();
+        echo json_encode($menu);
+    }
+    public function editsubmenu()
+    {
+        $this->form_validation->set_rules('judul', 'Title', 'required');
+        $this->form_validation->set_rules('menu_select_id', 'Menu', 'required');
+        $this->form_validation->set_rules('sub_menu_url', 'URL', 'required');
+        $this->form_validation->set_rules('sub_menu_icon', 'Icon', 'required');
+
+        if ($this->form_validation->run() == false) {
+            $this->session->set_flashdata('message', '<div class="alert alert-danger" role="alert">Sub menu edited failed! All form is required.</div>');
+
+            redirect('menu/submenu');
+        } else {
+            $id = $this->input->post('subMenuId');
+            $data = array(
+                'title' => $this->input->post('judul'),
+                'menu_id' => $this->input->post('menu_select_id'),
+                'url' => $this->input->post('sub_menu_url'),
+                'icon' => $this->input->post('sub_menu_icon'),
+                'is_active' => $this->input->post('sub_menu_active'),
+            );
+            $this->db->where('id', $id);
+            $this->db->update('user_sub_menu', $data);
+            $this->session->set_flashdata('message', '<div class="alert alert-success" role="alert">Sub menu has been edited</div>');
+            redirect('menu/submenu');
+        }
+    }
 }
