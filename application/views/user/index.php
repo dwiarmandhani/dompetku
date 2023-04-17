@@ -3,13 +3,15 @@
 
     <!-- Page Heading -->
     <h1 class="h3 mb-4 text-gray-800"><?php echo $title; ?></h1>
-
+    <div class="row">
+        <div class="col-lg-6">
+            <?php echo $this->session->flashdata('message'); ?>
+        </div>
+    </div>
     <div class="card mb-3" style="max-width: 540px;">
         <div class="row g-0">
             <div class="col-md-4">
-                <img src="<?php echo base_url('assets/img/profile/') . $user['image'] ?>"
-                    class="img-fluid rounded-start"
-                    alt="<?php echo base_url('assets/img/profile/') . $user['image'] ?>">
+                <img src="<?php echo base_url('assets/img/profile/') . $user['image'] ?>" class="img-fluid rounded-start" alt="<?php echo base_url('assets/img/profile/') . $user['image'] ?>">
             </div>
             <div class="col-md-8">
                 <div class="card-body">
