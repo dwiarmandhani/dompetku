@@ -71,7 +71,6 @@ class User extends CI_Controller
             redirect('user');
         }
     }
-
     public function changepassword()
     {
         $data['title'] = 'Change Password';
