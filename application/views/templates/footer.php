@@ -2,7 +2,7 @@
 <footer class="sticky-footer bg-white">
     <div class="container my-auto">
         <div class="copyright text-center my-auto">
-            <span>Copyright &copy; SiLogin <?php echo date('Y', $user['date_created']); ?></span>
+            <span>Copyright &copy; Dompetku <?php echo date('Y', $user['date_created']); ?></span>
         </div>
     </div>
 </footer>
@@ -83,6 +83,7 @@
                 // $('#editMenuModal').modal('show');
                 $('#menuId').val(data.menu.id);
                 $('#menuname').val(data.menu.menu);
+                $('#ordermenu').val(data.menu.urutan);
             }
         })
     });

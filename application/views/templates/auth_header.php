@@ -20,4 +20,4 @@
 
 </head>
 
-<body class="bg-gradient-secondary">
+<body class="bg-gradient-danger">

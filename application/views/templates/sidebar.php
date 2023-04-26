@@ -1,17 +1,17 @@
 <!-- Sidebar -->
-<ul class="navbar-nav bg-gradient-secondary sidebar sidebar-dark accordion" id="accordionSidebar">
+<ul class="navbar-nav bg-gradient-danger sidebar sidebar-dark accordion" id="accordionSidebar">
 
     <!-- Sidebar - Brand -->
-    <a class="sidebar-brand d-flex align-items-center justify-content-center" href="index.html">
+    <a class="sidebar-brand d-flex align-items-center justify-content-center" href="<?php echo base_url(); ?>">
         <div class="sidebar-brand-icon rotate-n-15">
-            <i class="fas fa-code"></i>
+            <i class="fas fa-wallet"></i>
         </div>
-        <div class="sidebar-brand-text mx-3">SILOGIN ADMIN</div>
+        <div class="sidebar-brand-text mx-3">DOMPETKU</div>
     </a>
 
     <?php
     $role_id = $this->session->userdata('role_id');
-    $queryMenu = "SELECT `user_menu`.`id`, `menu` FROM `user_menu` JOIN `user_access_menu` ON `user_menu`.`id` = `user_access_menu`.`menu_id` WHERE `user_access_menu`.`role_id` = $role_id ORDER BY `user_access_menu`.`menu_id` ASC";
+    $queryMenu = "SELECT `user_menu`.`id`, `menu` FROM `user_menu` JOIN `user_access_menu` ON `user_menu`.`id` = `user_access_menu`.`menu_id` WHERE `user_access_menu`.`role_id` = $role_id ORDER BY `user_menu`.`urutan` ASC";
 
     $menu = $this->db->query($queryMenu)->result_array();
     ?>

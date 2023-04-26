@@ -18,6 +18,7 @@ class Menu extends CI_Controller
         $data['menu'] = $this->db->get('user_menu')->result_array();
 
         $this->form_validation->set_rules('menu', 'Menu', 'required');
+        $this->form_validation->set_rules('order', 'Order', 'required');
 
         if ($this->form_validation->run() == false) {
             $this->load->view('templates/header', $data);
@@ -26,9 +27,25 @@ class Menu extends CI_Controller
             $this->load->view('menu/index', $data);
             $this->load->view('templates/footer');
         } else {
-            $this->db->insert('user_menu', ['menu' => $this->input->post('menu')]);
-            $this->session->set_flashdata('message', '<div class="alert alert-success" role="alert">New menu added</div>');
-            redirect('menu');
+            $query = "SELECT urutan FROM user_menu";
+            $urutan = $this->db->query($query)->result_array();
+            $is_found = false;
+
+            foreach ($urutan as $item) {
+                if ($item['urutan'] == $this->input->post('order')) {
+                    $is_found = true;
+                    break;
+                }
+            }
+
+            if ($is_found === true) {
+                $this->session->set_flashdata('message', '<div class="alert alert-danger" role="alert">The order already exists.</div>');
+                redirect('menu');
+            } else {
+                $this->db->insert('user_menu', ['menu' => $this->input->post('menu'), 'urutan' => $this->input->post('order')]);
+                $this->session->set_flashdata('message', '<div class="alert alert-success" role="alert">New menu added</div>');
+                redirect('menu');
+            }
         }
     }
 
@@ -90,6 +107,7 @@ class Menu extends CI_Controller
     public function editmenu()
     {
         $this->form_validation->set_rules('menu', 'Menu', 'required');
+        $this->form_validation->set_rules('order', 'Order', 'required');
 
         if ($this->form_validation->run() == false) {
             $this->session->set_flashdata('message', '<div class="alert alert-danger" role="alert">Menu edited failed!</div>');
@@ -98,12 +116,29 @@ class Menu extends CI_Controller
         } else {
             $id = $this->input->post('menu_id');
             $data = array(
-                'menu' => $this->input->post('menu')
+                'menu' => $this->input->post('menu'),
+                'urutan' => $this->input->post('order')
             );
-            $this->db->where('id', $id);
-            $this->db->update('user_menu', $data);
-            $this->session->set_flashdata('message', '<div class="alert alert-success" role="alert">Menu has been edited</div>');
-            redirect('menu');
+
+            $query = "SELECT urutan FROM user_menu WHERE id != $id";
+            $urutan = $this->db->query($query)->result_array();
+            $is_found = false;
+
+            foreach ($urutan as $item) {
+                if ($item['urutan'] == $this->input->post('order')) {
+                    $is_found = true;
+                    break;
+                }
+            }
+            if ($is_found === true) {
+                $this->session->set_flashdata('message', '<div class="alert alert-danger" role="alert">The order already exists.</div>');
+                redirect('menu');
+            } else {
+                $this->db->where('id', $id);
+                $this->db->update('user_menu', $data);
+                $this->session->set_flashdata('message', '<div class="alert alert-success" role="alert">Menu has been edited</div>');
+                redirect('menu');
+            }
         }
     }
     public function opensubmenuedit($id)

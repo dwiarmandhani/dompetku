@@ -14,6 +14,7 @@
                     <tr>
                         <th scope="col">No</th>
                         <th scope="col">Menu</th>
+                        <th scope="col">Order List</th>
                         <th scope="col">Action</th>
                     </tr>
                 </thead>
@@ -23,6 +24,7 @@
                         <tr>
                             <th scope="row"><?= $i; ?></th>
                             <td><?= $m['menu']; ?></td>
+                            <td><?= $m['urutan']; ?></td>
                             <td>
                                 <a href="" class="badge badge-success editMenu" data-toggle="modal" data-target="#editMenuModal" data-id="<?php echo $m['id']; ?>">edit</a>
                                 <a href="<?php echo base_url('menu/deletemenu'); ?>/<?= $m['id']; ?>" onclick="return confirm('Are you sure you want to delete this item?');" class="badge badge-danger">delete</a>
@@ -58,6 +60,9 @@
                     <div class="form-group">
                         <input type="text" class="form-control" id="menu" name="menu" placeholder="Menu Name...">
                     </div>
+                    <div class="form-group">
+                        <input type="number" class="form-control" id="order" name="order" placeholder="Order...">
+                    </div>
 
                 </div>
                 <div class="modal-footer">
@@ -83,6 +88,9 @@
                     <input type="hidden" class="form-control" id="menuId" name="menu_id" placeholder="Menu Name...">
                     <div class="form-group">
                         <input type="text" class="form-control" id="menuname" name="menu" placeholder="Menu Name...">
+                    </div>
+                    <div class="form-group">
+                        <input type="number" class="form-control" id="ordermenu" name="order" placeholder="Order...">
                     </div>
 
                 </div>
