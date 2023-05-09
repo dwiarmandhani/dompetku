@@ -1,6 +1,6 @@
 <!-- Footer -->
 <footer class="sticky-footer bg-white">
-    <div class="container my-auto">
+    <div class=" container my-auto">
         <div class="copyright text-center my-auto">
             <span>Copyright &copy; Dompetku <?php echo date('Y', $user['date_created']); ?></span>
         </div>
@@ -121,6 +121,56 @@
             }
         });
     });
+
+    $('.editIncomeList').on('click', function() {
+        const incomeListId = $(this).data('id');
+        $.ajax({
+            url: "<?php echo base_url('financial/openincomelistedit/') ?>" + incomeListId,
+            type: "GET",
+            data: {
+                id: incomeListId
+            },
+            dataType: "json",
+            success: function(data) {
+                // $('#editMenuModal').modal('show');
+                $('#incomelistid').val(data.incomelist.id);
+                $('#incomename').val(data.incomelist.income_name);
+            }
+        });
+    })
+    $('.editCategoryList').on('click', function() {
+        const categoryListId = $(this).data('id');
+        $.ajax({
+            url: "<?php echo base_url('financial/opencategorylistedit/') ?>" + categoryListId,
+            type: "GET",
+            data: {
+                id: categoryListId
+            },
+            dataType: "json",
+            success: function(data) {
+                // $('#editMenuModal').modal('show');
+                $('#categorylist_id').val(data.categoryList.id);
+                $('#categoryListName').val(data.categoryList.category_name);
+            }
+        });
+    })
+    $('.editWallet').on('click', function() {
+        const walletId = $(this).data('id');
+        // $('#editMenuModal').modal('show');
+        $.ajax({
+            url: "<?php echo base_url('financial/openwalletedit/') ?>" + walletId,
+            type: "GET",
+            data: {
+                id: walletId
+            },
+            dataType: "json",
+            success: function(data) {
+                $('#wallet_id').val(data.wallet.id);
+                $('#wallet_name').val(data.wallet.wallet_name);
+                $('#wallet_balance').val(data.wallet.total_balance);
+            }
+        });
+    })
 </script>
 </body>
 
