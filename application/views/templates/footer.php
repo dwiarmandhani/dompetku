@@ -171,6 +171,43 @@
             }
         });
     })
+    $('.moveMoney').on('click', function() {
+        const walletId = $(this).data('id');
+        // $('#editMenuModal').modal('show');
+        $.ajax({
+            url: "<?php echo base_url('financial/openmovemoney/') ?>" + walletId,
+            type: "GET",
+            data: {
+                id: walletId
+            },
+            dataType: "json",
+            success: function(data) {
+                // this wallet
+                $('#money_id').val(data.money.id);
+                $('#money_wallet_hidden').val(data.money.total_balance);
+                $('#wallet_option').val(data.money.wallet_name);
+                $('.this_wallet option').val(data.money.wallet_name).text(data.money.wallet_name);
+                var total_balance = parseInt(data.money.total_balance);
+
+                // Memformat angka ke dalam format Rupiah
+                var formatRupiah = total_balance.toLocaleString('id-ID', {
+                    style: 'currency',
+                    currency: 'IDR'
+                });
+                $('.wallet_balance').html('<b>Your Balance</b> : ' + formatRupiah + '');
+
+                var selectField = $('.wallet_destination');
+
+                // Menghapus semua opsi sebelum menambahkan yang baru
+                selectField.empty();
+
+                $.each(data.walletdestitanion, function(index, wallet) {
+                    var option = $('<option>').attr('value', wallet.wallet_name).text(wallet.wallet_name);
+                    selectField.append(option);
+                })
+            }
+        });
+    })
 </script>
 </body>
 

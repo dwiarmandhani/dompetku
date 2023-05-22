@@ -8,7 +8,7 @@
             <?= form_error('incomeList', '<div class="alert alert-danger" role="alert">', '</div>'); ?>
             <?= $this->session->flashdata('message'); ?>
 
-            <a href="" class="btn btn-primary  mb-3" data-toggle="modal" data-target="#newIncomeListModal">Add New Menu</a>
+            <a href="" class="btn btn-primary  mb-3" data-toggle="modal" data-target="#newIncomeListModal">Add New Income</a>
             <table class="table table-hover">
                 <thead>
                     <tr>
@@ -81,7 +81,7 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="editIncomeListModalLabel">Edit Menu</h5>
+                <h5 class="modal-title" id="editIncomeListModalLabel">Edit Income</h5>
 
             </div>
             <form action="<?= base_url('financial/editincomelist'); ?>" method="post">

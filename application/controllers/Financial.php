@@ -131,10 +131,6 @@ class Financial extends CI_Controller
         $this->session->set_flashdata('message', '<div class="alert alert-success" role="alert">Category List item has been deleted</div>');
         redirect('financial/categorylist');
     }
-    // My Wallet
-    // Rules
-    // Jumlah harus diisi lewat cash in/ cashout
-    // kasih keteranga di bawah field
     public function mywallet()
     {
         $data['title'] = 'My Wallet';
@@ -189,5 +185,104 @@ class Financial extends CI_Controller
         $this->session->set_flashdata('message', '<div class="alert alert-success" role="alert">Wallet item has been deleted</div>');
 
         redirect('financial/mywallet');
+    }
+
+    // move money
+    public function openmovemoney($id)
+    {
+        $email = $this->session->userdata('email');
+        $query = $this->db->select('id')
+            ->from('user')
+            ->where('email', $email)
+            ->get();
+        $userid = $query->row();
+        $money['money'] = $this->db->get_where('user_wallet', ['id' => $id])->row();
+        $money['walletdestitanion'] = $this->db->get_where('user_wallet', ['user_id' => $userid->id])->result_array();
+        echo json_encode($money);
+    }
+
+    public function movemoney()
+    {
+        $this->form_validation->set_rules('select_destination', 'Destination', 'required');
+        $this->form_validation->set_rules('money_amount', 'Your Amount', 'required');
+        if ($this->form_validation->run() == false) {
+            $this->session->set_flashdata('message', '<div class="alert alert-danger" role="alert">Failed transaction!</div>');
+
+            redirect('financial/mywallet');
+        } else {
+            $walletid = $this->input->post('money_id');
+            $walletBalance = $this->input->post('money_wallet_hidden');
+            $amount = $this->input->post('money_amount');
+            $destionationSelected = $this->input->post('select_destination');
+            $walletOption = $this->input->post('wallet_option');
+
+            if ($walletOption !== $destionationSelected) {
+                if ((int)$amount <= (int)$walletBalance) {
+                    // start transaction
+                    $this->db->trans_begin();
+
+                    $email = $this->session->userdata('email');
+                    $queryUser = $this->db->select('id')
+                        ->from('user')
+                        ->where('email', $email)
+                        ->get();
+                    $resultUser = $queryUser->row();
+                    $userid = $resultUser->id;
+                    $queryDestionation = $this->db->select('total_balance')
+                        ->from('user_wallet')
+                        ->where('user_id', $userid)
+                        ->where('wallet_name', $destionationSelected)
+                        ->get();
+                    $resultBalance = $queryDestionation->row();
+                    $destionationBalance = $resultBalance->total_balance;
+                    $totalAmountFinal = (int) $destionationBalance + (int) $amount;
+                    $dataAmountFinal = array(
+                        'total_balance' => $totalAmountFinal
+                    );
+                    $this->db->where('user_id', $userid);
+                    $this->db->where('wallet_name', $destionationSelected);
+                    $this->db->update('user_wallet', $dataAmountFinal);
+                    $queryWallet = $this->db->select('total_balance')
+                        ->from('user_wallet')
+                        ->where('user_id', $userid)
+                        ->where('wallet_name', $walletOption)
+                        ->get();
+                    $resultDeduct = $queryWallet->row();
+                    $deductBalance = $resultDeduct->total_balance;
+                    $totalAmountDeduct = (int) $deductBalance - (int) $amount;
+                    $dataAmountDeduct = array(
+                        'total_balance' => $totalAmountDeduct
+                    );
+
+                    $this->db->where('id', $walletid);
+                    $this->db->update('user_wallet', $dataAmountDeduct);
+
+                    // Laporan transaksi Cash-in
+                    // laporan transaksi cash-out
+                    // laporan summary
+                    // var_dump($totalAmountFinal);
+                    if ($this->db->trans_status() === FALSE) {
+                        $this->db->trans_rollback();
+                        $this->session->set_flashdata('message', '<div class="alert alert-danger" role="alert">Failed transaction!</div>');
+                        redirect('financial/mywallet');
+                    } else {
+                        $this->db->trans_commit();
+                        $this->session->set_flashdata('message', '<div class="alert alert-success" role="alert">Money has been moved</div>');
+                        redirect('financial/mywallet');
+                    }
+                } else {
+                    $this->session->set_flashdata('message', '<div class="alert alert-danger" role="alert">Failed transaction! Your balance not valid.</div>');
+                    redirect('financial/mywallet');
+                }
+            } else {
+                $this->session->set_flashdata('message', '<div class="alert alert-danger" role="alert">Failed transaction! Wallet is Same.</div>');
+                redirect('financial/mywallet');
+            }
+        }
+    }
+
+    // Cash in
+    public function cashin()
+    {
     }
 }
