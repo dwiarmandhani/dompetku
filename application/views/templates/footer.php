@@ -124,6 +124,7 @@
 
     $('.editIncomeList').on('click', function() {
         const incomeListId = $(this).data('id');
+        // console.log(incomeListId);
         $.ajax({
             url: "<?php echo base_url('financial/openincomelistedit/') ?>" + incomeListId,
             type: "GET",
@@ -156,6 +157,7 @@
     })
     $('.editWallet').on('click', function() {
         const walletId = $(this).data('id');
+        // console.log(walletId)
         // $('#editMenuModal').modal('show');
         $.ajax({
             url: "<?php echo base_url('financial/openwalletedit/') ?>" + walletId,
@@ -205,6 +207,31 @@
                     var option = $('<option>').attr('value', wallet.wallet_name).text(wallet.wallet_name);
                     selectField.append(option);
                 })
+            }
+        });
+    })
+
+    $('.editcashin').on('click', function() {
+        const cashinId = $(this).data('id');
+        // console.log(cashinId);
+        $.ajax({
+            url: "<?php echo base_url('financial/openeditcashin/') ?>" + cashinId,
+            type: "GET",
+            data: {
+                id: cashinId
+            },
+            dataType: "json",
+            success: function(data) {
+                console.log(data)
+                // $('#editMenuModal').modal('show');
+                $('#cashin_id').val(data.cashin.id);
+                $('#date_new').val(data.cashin.date);
+                $('#name_new').val(data.cashin.name);
+                $('#amount_new').val(data.cashin.amount);
+                $('#category_new').val(data.cashin.income_id);
+                $('#walletNew').val(data.cashin.wallet_id);
+                $('#last_amount').val(data.cashin.amount);
+                $('#last_wallet').val(data.cashin.wallet_id);
             }
         });
     })

@@ -21,6 +21,7 @@
                         <th scope="col">Menu</th>
                         <th scope="col">url</th>
                         <th scope="col">icon</th>
+                        <th scope="col">Sort</th>
                         <th scope="col">active</th>
                         <th scope="col">action</th>
                     </tr>
@@ -34,6 +35,7 @@
                             <td><?= $sm['menu']; ?></td>
                             <td><?= $sm['url']; ?></td>
                             <td><?= $sm['icon']; ?></td>
+                            <td><?= $sm['urutan']; ?></td>
                             <td><?= $sm['is_active']; ?></td>
                             <td>
                                 <a href="" class="badge badge-success editSubMenu" data-toggle="modal" data-target="#editSubMenuModal" data-id="<?php echo $sm['id']; ?>">edit</a>
@@ -86,6 +88,9 @@
                         <input type="text" class="form-control" id="icon" name="icon" placeholder="Sub Menu Icon...">
                     </div>
                     <div class="form-group">
+                        <input type="text" class="form-control" id="sort" name="sort" placeholder="Sort...">
+                    </div>
+                    <div class="form-group">
                         <div class="form-check">
                             <input class="form-check-input" type="checkbox" value="1" id="is_active" name="is_active" checked>
                             <label class="form-check-label" for="is_active">
@@ -134,6 +139,9 @@
                     </div>
                     <div class="form-group">
                         <input type="text" class="form-control" id="sub_menu_icon" name="sub_menu_icon" placeholder="Sub Menu Icon...">
+                    </div>
+                    <div class="form-group">
+                        <input type="text" class="form-control" id="sort" name="sort" placeholder="Sort...">
                     </div>
                     <div class="form-group">
                         <div class="form-check">

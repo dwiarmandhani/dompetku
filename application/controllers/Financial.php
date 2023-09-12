@@ -281,8 +281,179 @@ class Financial extends CI_Controller
         }
     }
 
+    public static function formatRupiah($angka)
+    {
+        $rupiah = number_format($angka, 0, ',', '.');
+        return "Rp " . $rupiah;
+    }
     // Cash in
     public function cashin()
     {
+        $data['title'] = 'Cash-in';
+        $data['user'] = $this->db->get_where('user', ['email' => $this->session->userdata('email')])->row_array();
+        $id = $data['user']['id'];
+        $query = $this->db->select('uc.*, uil.income_name, uw.wallet_name')
+            ->from('user_cashin uc')
+            ->join('user_income_list uil', 'uc.user_id = uil.user_id AND uc.income_id = uil.id')
+            ->join('user_wallet uw', 'uc.user_id = uw.user_id AND uc.wallet_id = uw.id')
+            ->where('uc.user_id', $id)
+            ->get();
+        $data['cashin'] = $query->result_array();
+
+        $data['category'] = $this->db->get_where('user_income_list', ['user_id' => $id])->result_array();
+        $data['walletName'] = $this->db->get_where('user_wallet', ['user_id' => $id])->result_array();
+
+        $this->form_validation->set_rules('date', 'Cash-in Date', 'required');
+        $this->form_validation->set_rules('name', 'Cash-in Name', 'required');
+        $this->form_validation->set_rules('category', 'Cash-in category', 'required');
+        $this->form_validation->set_rules('wallet', 'Cash-in wallet', 'required');
+        $this->form_validation->set_rules('amount', 'Cash-in amount', 'required');
+
+        if ($this->form_validation->run() == false) {
+            $this->load->view('templates/header', $data);
+            $this->load->view('templates/sidebar', $data);
+            $this->load->view('templates/topbar', $data);
+            $this->load->view('financial/cashin', $data);
+            $this->load->view('templates/footer');
+        } else {
+            $date = $this->input->post('date');
+            $amount = $this->input->post('amount');
+            $incomeId = $this->input->post('category');
+            $walletId = $this->input->post('wallet');
+            $cashinName = $this->input->post('name');
+            /** query wallet amount */
+            $queryWalletAmount = "SELECT total_balance, wallet_name FROM user_wallet WHERE id = $walletId AND user_id = $id";
+            $walletAmount = $this->db->query($queryWalletAmount)->row_array();
+            if (isset($walletAmount)) {
+                $lastAmount = $walletAmount['total_balance'];
+                /** insert tbl_cashin */
+                $dataCashin = [
+                    'user_id' => $id,
+                    'date' => $date,
+                    'name' => $cashinName,
+                    'income_id' => $incomeId,
+                    'wallet_id' => $walletId,
+                    'amount' => $amount,
+                ];
+                $this->db->insert('user_cashin', $dataCashin);
+
+                /** update tbl_wallet_amount */
+                $newAmount = (float) $lastAmount + (float) $amount;
+                $dataWallet = [
+                    'total_balance' => $newAmount
+                ];
+
+                $this->db->update('user_wallet', $dataWallet, ['id' => $walletId, 'user_id' => $id]);
+
+                $this->session->set_flashdata('message', '<div class="alert alert-success" role="alert">New Cahs-in added</div>');
+                redirect('financial/cashin');
+            } else {
+                $this->session->set_flashdata('message', '<div class="alert alert-danger" role="alert">Check your Wallet, the wallet is not Exist.</div>');
+                redirect('financial/cashin');
+            }
+        }
+
+        // var_dump($data['cashin']);
+
+    }
+    public function openeditcashin($id)
+    {
+        $cashin['cashin'] = $this->db->get_where('user_cashin', ['id' => $id])->row();
+
+        echo json_encode($cashin);
+    }
+    public function editcashin()
+    {
+        $this->form_validation->set_rules('date_new', 'Cash-in Date', 'required');
+        $this->form_validation->set_rules('name_new', 'Cash-in Name', 'required');
+        $this->form_validation->set_rules('category_new', 'Cash-in category', 'required');
+        $this->form_validation->set_rules('walletNew', 'Cash-in wallet', 'required');
+        $this->form_validation->set_rules('amount_new', 'Cash-in amount', 'required');
+        if ($this->form_validation->run() == false) {
+            $this->session->set_flashdata('message', '<div class="alert alert-danger" role="alert">Cash-in edited failed!</div>');
+
+            redirect('financial/cashin');
+        } else {
+            $email = $this->session->userdata('email');
+            $query = $this->db->select('id')
+                ->from('user')
+                ->where('email', $email)
+                ->get();
+            $userid = $query->row();
+            $cashId = $this->input->post('cashin_id');
+            $date = $this->input->post('date_new');
+            $name = $this->input->post('name_new');
+            $category = $this->input->post('category_new');
+            $wallet = $this->input->post('walletNew');
+            $amount = $this->input->post('amount_new');
+            $lastAmount = $this->input->post('last_amount');
+            $lastWalletBalance = $this->input->post('last_wallet');
+
+
+            /** query wallet amount */
+            $queryWalletAmount = "SELECT total_balance, wallet_name FROM user_wallet WHERE id = $wallet AND user_id = $userid->id";
+            $walletAmount = $this->db->query($queryWalletAmount)->row_array();
+
+            $queryLastWalletAmount = "SELECT total_balance, wallet_name FROM user_wallet WHERE id = $lastWalletBalance AND user_id = $userid->id";
+            $resultLastWalletAmount = $this->db->query($queryLastWalletAmount)->row_array();
+
+            if (isset($walletAmount)) {
+                $resLastWalletAmount = $walletAmount['total_balance'];
+                $resLastWalletAmountAwal = $resultLastWalletAmount['total_balance'];
+
+                $queryLastWallet = "SELECT wallet_id, amount FROM user_cashin WHERE id = $cashId";
+                $lastWallet = $this->db->query($queryLastWallet)->row_array();
+                $lastWalletAmount = $lastWallet['amount'];
+                $dataCashin = [
+                    'wallet_id' => $wallet,
+                    'amount' => $amount,
+                ];
+                $this->db->update('user_cashin', $dataCashin, ['id' => $cashId]);
+
+
+
+                if ($lastWallet['wallet_id'] != $wallet) {
+                    // rset balance wallet sebelumnya
+                    $newAmountWallet = (float) $resLastWalletAmountAwal - (float) $lastAmount;
+
+                    $dataWallet = [
+                        'total_balance' => $newAmountWallet
+                    ];
+
+                    $this->db->update('user_wallet', $dataWallet, ['id' => $lastWalletBalance, 'user_id' => $userid->id]);
+
+
+                    /** move money */
+                    $newBalance = (float)$resLastWalletAmount + (float)$amount;
+
+                    $dataWallet2 = [
+                        'total_balance' => $newBalance
+                    ];
+
+                    $this->db->update('user_wallet', $dataWallet2, ['id' => $wallet, 'user_id' => $userid->id]);
+
+
+                    $this->session->set_flashdata('message', '<div class="alert alert-success" role="alert">Cahs-in has been edited and move money to another wallet.</div>');
+                    redirect('financial/cashin');
+                } else {
+                    // jika sama wallet
+                    $penguranganAmount = (float)$lastWalletAmount - (float)$amount;
+
+                    $newBalance = (float)$resLastWalletAmount - (float)$penguranganAmount;
+
+                    $dataWallet = [
+                        'total_balance' => $newBalance
+                    ];
+
+                    $this->db->update('user_wallet', $dataWallet, ['id' => $wallet, 'user_id' => $userid->id]);
+
+                    $this->session->set_flashdata('message', '<div class="alert alert-success" role="alert">Cahs-in has been edited</div>');
+                    redirect('financial/cashin');
+                }
+            } else {
+                $this->session->set_flashdata('message', '<div class="alert alert-danger" role="alert">Check your Wallet, the wallet is not Exist.</div>');
+                redirect('financial/cashin');
+            }
+        }
     }
 }
