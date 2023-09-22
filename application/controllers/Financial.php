@@ -12,7 +12,7 @@ class Financial extends CI_Controller
     }
     public function index()
     {
-        $data['title'] = 'Incomes Resources';
+        $data['title'] = 'Summary';
         $data['user'] = $this->db->get_where('user', ['email' => $this->session->userdata('email')])->row_array();
 
         $this->load->view('templates/header', $data);
@@ -20,6 +20,246 @@ class Financial extends CI_Controller
         $this->load->view('templates/topbar', $data);
         $this->load->view('financial/index', $data);
         $this->load->view('templates/footer');
+    }
+
+    public function getDataSummary()
+    {
+        $data['user'] = $this->db->get_where('user', ['email' => $this->session->userdata('email')])->row_array();
+        $id = $data['user']['id'];
+        $hasilData['cashin'] = $this->db->get_where('user_cashin', ['user_id' => $id])->result_array();
+        $cashin = $hasilData['cashin'];
+
+        /** cashin summary grafik */
+        $monthlyTotal = [];
+
+        for ($month = 1; $month <= 12; $month++) {
+            $monthStr = str_pad($month, 2, '0', STR_PAD_LEFT); // Format bulan menjadi dua digit (misalnya, 01, 02, dst.)
+            $monthlyTotal[] = 0;
+        }
+
+        foreach ($cashin as $item) {
+            $date = $item['date'];
+            $amount = $item['amount'];
+            $month = date('n', strtotime($date)); // Mengambil bulan sebagai angka (1-12)
+
+            $monthlyTotal[$month - 1] += $amount; // Mengakses indeks array sesuai bulan dan menambahkan jumlah
+        }
+
+        $hasilData['monthlyTotal_cashin'] = $monthlyTotal;
+        /** end of cashin summary grafik */
+
+        /** cashout summary grafik */
+        $hasilData['cashout'] = $this->db->get_where('user_cashout', ['user_id' => $id])->result_array();
+        $cashout = $hasilData['cashout'];
+
+        $monthlyTotalCashout = [];
+
+        for ($month = 1; $month <= 12; $month++) {
+            $monthStr = str_pad($month, 2, '0', STR_PAD_LEFT); // Format bulan menjadi dua digit (misalnya, 01, 02, dst.)
+            $monthlyTotalCashout[] = 0;
+        }
+
+        foreach ($cashout as $item) {
+            $date = $item['date'];
+            $amount = $item['amount'];
+            $month = date('n', strtotime($date)); // Mengambil bulan sebagai angka (1-12)
+
+            $monthlyTotalCashout[$month - 1] += $amount; // Mengakses indeks array sesuai bulan dan menambahkan jumlah
+        }
+
+        $hasilData['monthlyTotal_cashout'] = $monthlyTotalCashout;
+        /** end of cashout summary grafik */
+
+        echo json_encode($hasilData);
+        // print_r($hasilData);
+    }
+    public static function calculateTotalForDateRange($transactions, $startDate, $endDate)
+    {
+        $filteredTransactions = [];
+
+        foreach ($transactions as $transaction) {
+            $transactionDate = date('Y-m-d', strtotime($transaction['date']));
+
+            // Mengubah tanggal menjadi objek DateTime
+            $transactionDateTime = new DateTime($transactionDate);
+            $startDateTime = new DateTime($startDate);
+            $endDateTime = new DateTime($endDate);
+
+            // Memeriksa apakah tanggal transaksi berada dalam rentang yang benar
+            if ($transactionDateTime >= $startDateTime && $transactionDateTime <= $endDateTime) {
+                $filteredTransactions[] = $transaction;
+            }
+        }
+
+        $totalAmount = array_sum(array_column($filteredTransactions, 'amount'));
+        return $totalAmount;
+    }
+    public function categoryCashin($user_id, $transactions, $startDate, $endDate)
+    {
+        $filteredTransactionsCategory = [];
+        $filteredTransactionsAmount = [];
+        $categoryIncomeTotals = []; // Initialize an array to store category income totals
+
+        foreach ($transactions as $transaction) {
+            $transactionDate = date('Y-m-d', strtotime($transaction['date']));
+
+            // Mengubah tanggal menjadi objek DateTime
+            $transactionDateTime = new DateTime($transactionDate);
+            $startDateTime = new DateTime($startDate);
+            $endDateTime = new DateTime($endDate);
+
+            // Memeriksa apakah tanggal transaksi berada dalam rentang yang benar
+            if ($transactionDateTime >= $startDateTime && $transactionDateTime <= $endDateTime) {
+                $income = $this->db->get_where('user_income_list', ['user_id' => $user_id, 'id' => intval($transaction['income_id'])])->row_array();
+                $categoryName = $income['income_name'];
+                $categoryAmount = $transaction['amount'];
+
+                // Add the amount to the category's total income
+                if (!isset($categoryIncomeTotals[$categoryName])) {
+                    $categoryIncomeTotals[$categoryName] = 0;
+                }
+                $categoryIncomeTotals[$categoryName] += $categoryAmount;
+
+                $filteredTransactionsCategory[] = $categoryName;
+                $filteredTransactionsAmount[] = $categoryAmount;
+            }
+        }
+
+        $data['data'] = ['filteredTransactionsCategory' => $filteredTransactionsCategory, 'filteredTransactionsAmount' => $filteredTransactionsAmount];
+
+        // Find the category with the highest income
+        $highestIncomeCategory = '';
+        $highestIncomeAmount = 0;
+
+        foreach ($categoryIncomeTotals as $category => $total) {
+            if ($total > $highestIncomeAmount) {
+                $highestIncomeCategory = $category;
+                $highestIncomeAmount = $total;
+            }
+        }
+
+        $data['highestIncomeCategory'] = $highestIncomeCategory;
+        $data['highestIncomeAmount'] = $highestIncomeAmount;
+
+        return $data;
+    }
+    public function filteredCategoryGraphic()
+    {
+        $data['user'] = $this->db->get_where('user', ['email' => $this->session->userdata('email')])->row_array();
+        $id = $data['user']['id'];
+        $hasilData['cashin'] = $this->db->get_where('user_cashin', ['user_id' => $id])->result_array();
+        $cashin = $hasilData['cashin'];
+        $hasilData['cashout'] = $this->db->get_where('user_cashout', ['user_id' => $id])->result_array();
+        $cashout = $hasilData['cashout'];
+        // contoh code
+        // Tanggal custom yang ingin Anda hitung (misalnya 3 bulan terakhir)
+        // declare pilihan 1,3,custom
+        $pilihWaktu = $_GET['pickMonth'];
+        if ($pilihWaktu === '1 Month') {
+            $endDateOne = date('Y-m-d'); // Tanggal saat ini
+            $startDateOne = date('Y-m-d', strtotime('-1 months', strtotime($endDateOne))); // 3 bulan sebelumnya
+            // Menghitung total cashin dan cashout untuk rentang tanggal yang telah ditentukan
+            $totalCashin = $this->calculateTotalForDateRange($cashin, $startDateOne, $endDateOne);
+            $totalCashout = $this->calculateTotalForDateRange($cashout, $startDateOne, $endDateOne);
+            $selisihCash = floatval($totalCashin) - floatval($totalCashout);
+            // Menentukan pesan berdasarkan perbandingan
+            if ($totalCashout > 0.5 * $totalCashin) {
+                $message = "Status keuangan Anda buruk";
+            } else {
+                $message = "Status keuangan Anda baik";
+            }
+            // Mengembalikan hasil dalam format JSON
+            $result = [
+                'start_date' => $startDateOne,
+                'end_date' => $endDateOne,
+                'total_cashin' => $totalCashin,
+                'selisih_cashin' => $selisihCash,
+                'total_cashout' => $totalCashout,
+                'message' => $message,
+            ];
+
+            echo json_encode($result);
+        } elseif ($pilihWaktu === '3 Month') {
+            $endDateTiga = date('Y-m-d'); // Tanggal saat ini
+            $startDateTiga = date('Y-m-d', strtotime('-3 months', strtotime($endDateTiga)));
+            // Menghitung total cashin dan cashout untuk rentang tanggal yang telah ditentukan
+            $totalCashin = $this->calculateTotalForDateRange($cashin, $startDateTiga, $endDateTiga);
+            $totalCashout = $this->calculateTotalForDateRange($cashout, $startDateTiga, $endDateTiga);
+            $selisihCash = floatval($totalCashin) - floatval($totalCashout);
+            // Menentukan pesan berdasarkan perbandingan
+            if ($totalCashout > 0.5 * $totalCashin) {
+                $message = "Status keuangan Anda buruk";
+            } else {
+                $message = "Status keuangan Anda baik";
+            }
+            // Mengembalikan hasil dalam format JSON
+            $result = [
+                'start_date' => $startDateTiga,
+                'end_date' => $endDateTiga,
+                'total_cashin' => $totalCashin,
+                'selisih_cashin' => $selisihCash,
+                'total_cashout' => $totalCashout,
+                'message' => $message,
+            ];
+
+            echo json_encode($result);
+        } else if ($pilihWaktu === 'custom_date') {
+            $endDate = $_GET['endDate'];
+            $startDate = $_GET['startDate'];
+
+            // Menghitung total cashin dan cashout untuk rentang tanggal yang telah ditentukan
+            $totalCashin = $this->calculateTotalForDateRange($cashin, $startDate, $endDate);
+            $totalCashout = $this->calculateTotalForDateRange($cashout, $startDate, $endDate);
+            $selisihCash = floatval($totalCashin) - floatval($totalCashout);
+            // Menentukan pesan berdasarkan perbandingan
+            if ($totalCashout > 0.5 * $totalCashin) {
+                $message = "Status keuangan Anda buruk";
+            } else {
+                $message = "Status keuangan Anda baik";
+            }
+            // Mengembalikan hasil dalam format JSON
+            $result = [
+                'start_date' => $startDate,
+                'end_date' => $endDate,
+                'total_cashin' => $totalCashin,
+                'selisih_cashin' => $selisihCash,
+                'total_cashout' => $totalCashout,
+                'message' => $message,
+            ];
+
+            echo json_encode($result);
+        }
+    }
+    public function filteredCashinGraphic()
+    {
+        $data['user'] = $this->db->get_where('user', ['email' => $this->session->userdata('email')])->row_array();
+        $id = $data['user']['id'];
+        $hasilData['cashin'] = $this->db->get_where('user_cashin', ['user_id' => $id])->result_array();
+        $cashin = $hasilData['cashin'];
+
+        $pilihWaktu = $_GET['pickMonth'];
+
+        if ($pilihWaktu === '1 Month') {
+            $endDateOne = date('Y-m-d'); // Tanggal saat ini
+            $startDateOne = date('Y-m-d', strtotime('-1 months', strtotime($endDateOne)));
+            $totalCashin = $this->calculateTotalForDateRange($cashin, $startDateOne, $endDateOne);
+            $arrayCashin = $this->categoryCashin($id, $cashin, $startDateOne, $endDateOne);
+            $filteredCategory = $arrayCashin['data']['filteredTransactionsCategory'];
+            $filteredAmount = $arrayCashin['data']['filteredTransactionsAmount'];
+            $result = [
+                'start_date' => $startDateOne,
+                'end_date' => $endDateOne,
+                'total_cashin' => $totalCashin,
+                'arrayCashinCategory' => $filteredAmount,
+                'arrayCategory' => $filteredCategory,
+                'highestIncomeCategory' => $arrayCashin['highestIncomeCategory'],
+                'highestIncomeAmount' => $arrayCashin['highestIncomeAmount'],
+                'message' => $arrayCashin['highestIncomeCategory'] . ' menjadi penghasilan terbesarmu, dengan nilai Rp. ' . $arrayCashin['highestIncomeAmount'] . ' , semangat kerjanya kawan!',
+            ];
+        } else if ($pilihWaktu === '3 Month') {
+        } else if ($pilihWaktu === 'custom_date') {
+        }
+        echo json_encode($result);
     }
     // income list
     public function incomelist()
@@ -137,6 +377,14 @@ class Financial extends CI_Controller
         $data['user'] = $this->db->get_where('user', ['email' => $this->session->userdata('email')])->row_array();
         $id = $data['user']['id'];
         $data['myWallet'] = $this->db->get_where('user_wallet', ['user_id' => $id])->result_array();
+
+        $totalBalance = 0;
+        if (isset($data['myWallet'])) {
+            foreach ($data['myWallet'] as $wallet) {
+                $totalBalance += intval($wallet["total_balance"]);
+            }
+        }
+        $data['total_balance'] = (int) $totalBalance;
 
         $this->form_validation->set_rules('walletName', 'Wallet Name', 'required');
 
@@ -300,6 +548,15 @@ class Financial extends CI_Controller
             ->get();
         $data['cashin'] = $query->result_array();
 
+        $total_balance = 0;
+        if (isset($data['cashin'])) {
+            foreach ($data['cashin'] as $cashin) {
+                $total_balance += intval($cashin["amount"]);
+            }
+        }
+        $data['total_cashin'] = (int) $total_balance;
+
+
         $data['category'] = $this->db->get_where('user_income_list', ['user_id' => $id])->result_array();
         $data['walletName'] = $this->db->get_where('user_wallet', ['user_id' => $id])->result_array();
 
@@ -352,9 +609,6 @@ class Financial extends CI_Controller
                 redirect('financial/cashin');
             }
         }
-
-        // var_dump($data['cashin']);
-
     }
     public function openeditcashin($id)
     {
@@ -455,5 +709,264 @@ class Financial extends CI_Controller
                 redirect('financial/cashin');
             }
         }
+    }
+
+    public function deletecashin($id)
+    {
+        $data['user'] = $this->db->get_where('user', ['email' => $this->session->userdata('email')])->row_array();
+        $userId = $data['user']['id'];
+
+        $queryCashin = $this->db->select('uc.*, uil.income_name, uw.wallet_name')
+            ->from('user_cashin uc')
+            ->join('user_income_list uil', 'uc.user_id = uil.user_id AND uc.income_id = uil.id')
+            ->join('user_wallet uw', 'uc.user_id = uw.user_id AND uc.wallet_id = uw.id')
+            ->where('uc.id', $id)
+            ->get();
+
+        $dataCashin = $queryCashin->row_array();
+
+        $walletId = $dataCashin['wallet_id'];
+        /** query wallet amount */
+        $queryWalletAmount = "SELECT total_balance, wallet_name FROM user_wallet WHERE id = $walletId AND user_id = $userId";
+        $walletAmount = $this->db->query($queryWalletAmount)->row_array();
+
+        if (isset($walletAmount)) {
+            $lastAmount = $walletAmount['total_balance'];
+            $amount = $dataCashin['amount'];
+
+            /** update tbl_wallet_amount */
+            $newAmount = (float) $lastAmount - (float) $amount;
+
+            $dataWallet = [
+                'total_balance' => $newAmount
+            ];
+
+            $this->db->update('user_wallet', $dataWallet, ['id' => $walletId, 'user_id' => $userId]);
+
+            $this->session->set_flashdata('message', '<div class="alert alert-success" role="alert">New Cahs-in added</div>');
+        }
+
+        $this->db->where('id', $id);
+        $this->db->delete('user_cashin');
+        $this->session->set_flashdata('message', '<div class="alert alert-success" role="alert">Cash-in has been deleted</div>');
+
+        redirect('financial/cashin');
+    }
+    public function cashout()
+    {
+        $data['title'] = 'Cash-out';
+        $data['user'] = $this->db->get_where('user', ['email' => $this->session->userdata('email')])->row_array();
+        $id = $data['user']['id'];
+
+        $query = $this->db->select('uc.*, ucl.category_name, uw.wallet_name')
+            ->from('user_cashout uc')
+            ->join('user_category_list ucl', 'uc.user_id = ucl.user_id AND uc.category_id = ucl.id')
+            ->join('user_wallet uw', 'uc.user_id = uw.user_id AND uc.wallet_id = uw.id')
+            ->where('uc.user_id', $id)
+            ->get();
+        $data['cashout'] = $query->result_array();
+
+        $total_balance = 0;
+        if (isset($data['cashout'])) {
+            foreach ($data['cashout'] as $cashout) {
+                $total_balance += intval($cashout["amount"]);
+            }
+        }
+        $data['total_cashout'] = (int) $total_balance;
+        $data['category'] = $this->db->get_where('user_category_list', ['user_id' => $id])->result_array();
+        $data['walletName'] = $this->db->get_where('user_wallet', ['user_id' => $id])->result_array();
+
+        $this->form_validation->set_rules('date', 'Cash-out Date', 'required');
+        $this->form_validation->set_rules('name', 'Cash-out Name', 'required');
+        $this->form_validation->set_rules('category', 'Cash-out category', 'required');
+        $this->form_validation->set_rules('wallet', 'Cash-out wallet', 'required');
+        $this->form_validation->set_rules('amount', 'Cash-out amount', 'required');
+
+        if ($this->form_validation->run() == false) {
+            $this->load->view('templates/header', $data);
+            $this->load->view('templates/sidebar', $data);
+            $this->load->view('templates/topbar', $data);
+            $this->load->view('financial/cashout', $data);
+            $this->load->view('templates/footer');
+        } else {
+            $date = $this->input->post('date');
+            $amount = $this->input->post('amount');
+            $outcomeId = $this->input->post('category');
+            $walletId = $this->input->post('wallet');
+            $cashoutName = $this->input->post('name');
+
+            /** query wallet amount */
+            $queryWalletAmount = "SELECT total_balance, wallet_name FROM user_wallet WHERE id = $walletId AND user_id = $id";
+            $walletAmount = $this->db->query($queryWalletAmount)->row_array();
+
+            if (isset($walletAmount)) {
+                $lastAmount = $walletAmount['total_balance'];
+                $dataCashout = [
+                    'user_id' => $id,
+                    'date' => $date,
+                    'name' => $cashoutName,
+                    'category_id' => $outcomeId,
+                    'wallet_id' => $walletId,
+                    'amount' => $amount,
+                ];
+
+                $this->db->insert('user_cashout', $dataCashout);
+
+                /** update tbl_wallet_amount */
+                $newAmount = (float) $lastAmount - (float) $amount;
+                $dataWallet = [
+                    'total_balance' => $newAmount
+                ];
+
+                $this->db->update('user_wallet', $dataWallet, ['id' => $walletId, 'user_id' => $id]);
+                $this->session->set_flashdata('message', '<div class="alert alert-success" role="alert">New Cahs-out added</div>');
+                redirect('financial/cashout');
+            } else {
+                $this->session->set_flashdata('message', '<div class="alert alert-danger" role="alert">Check your Wallet, the wallet is not Exist.</div>');
+                redirect('financial/cashout');
+            }
+        }
+    }
+
+    public function openeditcashout($id)
+    {
+        $cashin['cashout'] = $this->db->get_where('user_cashout', ['id' => $id])->row();
+
+        echo json_encode($cashin);
+    }
+    public function editcashout()
+    {
+        $this->form_validation->set_rules('date_new', 'Cash-out Date', 'required');
+        $this->form_validation->set_rules('name_new', 'Cash-out Name', 'required');
+        $this->form_validation->set_rules('category_new', 'Cash-out category', 'required');
+        $this->form_validation->set_rules('walletNew', 'Cash-out wallet', 'required');
+        $this->form_validation->set_rules('amount_new', 'Cash-out amount', 'required');
+        if ($this->form_validation->run() == false) {
+            $this->session->set_flashdata('message', '<div class="alert alert-danger" role="alert">Cash-out edited failed!</div>');
+
+            redirect('financial/cashout');
+        } else {
+            $email = $this->session->userdata('email');
+            $query = $this->db->select('id')
+                ->from('user')
+                ->where('email', $email)
+                ->get();
+            $userid = $query->row();
+            $cashId = $this->input->post('cashout_id');
+            $date = $this->input->post('date_new');
+            $name = $this->input->post('name_new');
+            $category = $this->input->post('category_new');
+            $wallet = $this->input->post('walletNew');
+            $amount = $this->input->post('amount_new');
+            $lastAmount = $this->input->post('last_amount');
+            $lastWalletBalance = $this->input->post('last_wallet');
+
+
+            /** query wallet amount */
+            $queryWalletAmount = "SELECT total_balance, wallet_name FROM user_wallet WHERE id = $wallet AND user_id = $userid->id";
+            $walletAmount = $this->db->query($queryWalletAmount)->row_array();
+
+            $queryLastWalletAmount = "SELECT total_balance, wallet_name FROM user_wallet WHERE id = $lastWalletBalance AND user_id = $userid->id";
+            $resultLastWalletAmount = $this->db->query($queryLastWalletAmount)->row_array();
+
+            if (isset($walletAmount)) {
+                $resLastWalletAmount = $walletAmount['total_balance'];
+                $resLastWalletAmountAwal = $resultLastWalletAmount['total_balance'];
+
+                $queryLastWallet = "SELECT wallet_id, amount FROM user_cashout WHERE id = $cashId";
+                $lastWallet = $this->db->query($queryLastWallet)->row_array();
+                $lastWalletAmount = $lastWallet['amount'];
+                $dataCashout = [
+                    'wallet_id' => $wallet,
+                    'amount' => $amount,
+                ];
+                $this->db->update('user_cashout', $dataCashout, ['id' => $cashId]);
+
+                if ($lastWallet['wallet_id'] != $wallet) {
+                    // rset balance wallet sebelumnya
+                    $newAmountWallet = (float) $resLastWalletAmountAwal + (float) $lastAmount;
+
+                    $dataWallet = [
+                        'total_balance' => $newAmountWallet
+                    ];
+
+                    $this->db->update('user_wallet', $dataWallet, ['id' => $lastWalletBalance, 'user_id' => $userid->id]);
+
+
+                    /** move money */
+                    $newBalance = (float)$resLastWalletAmount - (float)$amount;
+
+                    $dataWallet2 = [
+                        'total_balance' => $newBalance
+                    ];
+
+                    $this->db->update('user_wallet', $dataWallet2, ['id' => $wallet, 'user_id' => $userid->id]);
+
+
+                    $this->session->set_flashdata('message', '<div class="alert alert-success" role="alert">Cahs-out has been edited and move money to another wallet.</div>');
+                    redirect('financial/cashout');
+                } else {
+                    // jika sama wallet
+                    $penguranganAmount = (float)$lastWalletAmount - (float)$amount;
+
+                    $newBalance = (float)$resLastWalletAmount + (float)$penguranganAmount;
+
+                    $dataWallet = [
+                        'total_balance' => $newBalance
+                    ];
+
+                    $this->db->update('user_wallet', $dataWallet, ['id' => $wallet, 'user_id' => $userid->id]);
+
+                    $this->session->set_flashdata('message', '<div class="alert alert-success" role="alert">Cahs-out has been edited</div>');
+                    redirect('financial/cashout');
+                }
+            } else {
+                $this->session->set_flashdata('message', '<div class="alert alert-danger" role="alert">Check your Wallet, the wallet is not Exist.</div>');
+                redirect('financial/cashout');
+            }
+        }
+    }
+
+    public function deletecashout($id)
+    {
+        $data['user'] = $this->db->get_where('user', ['email' => $this->session->userdata('email')])->row_array();
+        $userId = $data['user']['id'];
+
+        $query = $this->db->select('uc.*, ucl.category_name, uw.wallet_name')
+            ->from('user_cashout uc')
+            ->join('user_category_list ucl', 'uc.user_id = ucl.user_id AND uc.category_id = ucl.id')
+            ->join('user_wallet uw', 'uc.user_id = uw.user_id AND uc.wallet_id = uw.id')
+            ->where('uc.user_id', $userId)
+            ->get();
+
+        $dataCashout = $query->row_array();
+
+        $walletId = $dataCashout['wallet_id'];
+        /** query wallet amount */
+        $queryWalletAmount = "SELECT total_balance, wallet_name FROM user_wallet WHERE id = '$walletId' AND user_id = '$userId'";
+
+        $walletAmount = $this->db->query($queryWalletAmount)->row_array();
+
+        if (isset($walletAmount)) {
+            $lastAmount = $walletAmount['total_balance'];
+            $amount = $dataCashout['amount'];
+
+            /** update tbl_wallet_amount */
+            $newAmount = (float) $lastAmount + (float) $amount;
+
+            $dataWallet = [
+                'total_balance' => $newAmount
+            ];
+
+            $this->db->update('user_wallet', $dataWallet, ['id' => $walletId, 'user_id' => $userId]);
+
+            $this->session->set_flashdata('message', '<div class="alert alert-success" role="alert">New Cahs-out added</div>');
+        }
+
+        $this->db->where('id', $id);
+        $this->db->delete('user_cashout');
+        $this->session->set_flashdata('message', '<div class="alert alert-success" role="alert">Cash-out has been deleted</div>');
+
+        redirect('financial/cashout');
     }
 }

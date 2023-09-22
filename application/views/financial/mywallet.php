@@ -4,18 +4,37 @@
     <div class="row">
         <div class="col">
             <?= form_error('walletName', '<div class="alert alert-danger" role="alert">', '</div>'); ?>
-            <?= $this->session->flashdata('message'); ?>
+            <?= $this->session->flashdata('message');
 
+            function rupiah($angka)
+            {
+
+                $hasil_rupiah = "Rp " . number_format($angka, 2, ',', '.');
+                return $hasil_rupiah;
+            }
+            ?>
+
+            <div class="row">
+                <div class="card border-left-primary shadow h-100 py-2 ml-2">
+                    <div class="card-body">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                    Total Balance</div>
+                                <div class="h5 mb-0 font-weight-bold text-gray-800"><?php echo rupiah($total_balance); ?></div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fas fa-money-bill-wave-alt fa-2x text-gray-300"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <br>
             <a href="" class="btn btn-primary btn-sm mb-3" data-toggle="modal" data-target="#newWalletModal">Add New Wallet</a>
+
             <div class="row">
                 <?php
-                function rupiah($angka)
-                {
-
-                    $hasil_rupiah = "Rp " . number_format($angka, 2, ',', '.');
-                    return $hasil_rupiah;
-                }
-
                 if ($myWallet) {
                     foreach ($myWallet as $grid) {
                 ?>
