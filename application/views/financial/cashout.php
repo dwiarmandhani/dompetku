@@ -41,46 +41,63 @@
                 </div>
             <?php
             } ?>
-            <table class="table table-hover">
-                <thead>
-                    <tr>
-                        <th scope="col">No</th>
-                        <th scope="col">Date</th>
-                        <th scope="col">Name</th>
-                        <th scope="col">Category</th>
-                        <th scope="col">Wallet</th>
-                        <th scope="col">Amount</th>
-                        <th scope="col">Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php
-                    if ($cashout) {
-                    ?>
-                        <?php $i = 1; ?>
-                        <?php foreach ($cashout as $list) : ?>
-                            <tr>
-                                <th scope="row"><?= $i; ?></th>
-                                <td><?= $list['date']; ?></td>
-                                <td><?= $list['name']; ?></td>
-                                <td><?= $list['category_name']; ?></td>
-                                <td><?= $list['wallet_name']; ?></td>
-                                <td><?= formatRupiah($list['amount']); ?></td>
-                                <td>
-                                    <a href="" class="badge badge-success editcashout" data-toggle="modal" data-target="#editcashoutModal" data-id="<?php echo $list['id']; ?>">edit</a>
-                                    <a href="<?php echo base_url('financial/deletecashout'); ?>/<?= $list['id']; ?>" onclick="return confirm('Are you sure you want to delete this item?');" class="badge badge-danger">delete</a>
-                                </td>
-                            </tr>
-                            <?php $i++; ?>
-                        <?php endforeach; ?>
-                    <?php } else {  ?>
-                        <tr>
-                            <h1>Data not found</h1>
-                        </tr>
-                    <?php } ?>
 
-                </tbody>
-            </table>
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Cash-out</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <div id="dataTable_wrapper" class="dataTables_wrapper dt-bootstrap4">
+                            <div class="row">
+                                <div class="col-sm-12">
+                                    <table class="table table-bordered dataTable" id="dataTable" width="100%" cellspacing="0" role="grid" aria-describedby="dataTable_info" style="width: 100%;">
+                                        <thead>
+                                            <tr role="row">
+                                                <th class="sorting sorting_desc" tabindex="0" aria-controls="dataTable" rowspan="1" colspan="1" aria-label="" aria-sort="descending" style="width: 50px;">No</th>
+                                                <th class="sorting" tabindex="0" aria-controls="dataTable" rowspan="1" colspan="1" aria-label="" style="width: 100px;">Date</th>
+                                                <th class="sorting" tabindex="0" aria-controls="dataTable" rowspan="1" colspan="1" aria-label="" style="width: 150px;">Name</th>
+                                                <th class="sorting" tabindex="0" aria-controls="dataTable" rowspan="1" colspan="1" aria-label="" style="width: 114px;">Category</th>
+                                                <th class="sorting" tabindex="0" aria-controls="dataTable" rowspan="1" colspan="1" aria-label="" style="width: 200px;">Wallet</th>
+                                                <th class="sorting" tabindex="0" aria-controls="dataTable" rowspan="1" colspan="1" aria-label="" style="width: 107px;">Amount</th>
+                                                <th class="sorting" tabindex="0" aria-controls="dataTable" rowspan="1" colspan="1" aria-label="" style="width: 96px;">Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <?php
+                                            if ($cashout) {
+                                            ?>
+                                                <?php $i = 1; ?>
+                                                <?php foreach ($cashout as $list) : ?>
+                                                    <tr>
+                                                        <th scope="row"><?= $i; ?></th>
+                                                        <td><?= $list['date']; ?></td>
+                                                        <td><?= $list['name']; ?></td>
+                                                        <td><?= $list['category_name']; ?></td>
+                                                        <td><?= $list['wallet_name']; ?></td>
+                                                        <td><?= formatRupiah($list['amount']); ?></td>
+                                                        <td>
+                                                            <a href="" class="badge badge-success editcashout" data-toggle="modal" data-target="#editcashoutModal" data-id="<?php echo $list['id']; ?>">edit</a>
+                                                            <a href="<?php echo base_url('financial/deletecashout'); ?>/<?= $list['id']; ?>" onclick="return confirm('Are you sure you want to delete this item?');" class="badge badge-danger">delete</a>
+                                                        </td>
+                                                    </tr>
+                                                    <?php $i++; ?>
+                                                <?php endforeach; ?>
+                                            <?php } else {  ?>
+                                                <tr>
+                                                    <h1>Data not found</h1>
+                                                </tr>
+                                            <?php } ?>
+
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </div>
 

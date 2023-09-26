@@ -20,7 +20,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="card-body">
+                <div class="card-body" style="height: 500px; display: flex; flex-direction: column; justify-content: center;">
                     <div class="chart-area">
                         <div class="chartjs-size-monitor">
                             <div class="chartjs-size-monitor-expand">
@@ -32,9 +32,7 @@
                         </div>
                         <canvas id="myAreaChart" style="display: block; width: 664px; height: 320px;" width="664" height="320" class="chartjs-render-monitor"></canvas>
                     </div>
-
-                    <hr>
-                    <p>Pengeluaran tertinggimu adalah Kebutuhan</p>
+                    <p id="caption_myAreaChart"></p>
                 </div>
             </div>
         </div>
@@ -46,6 +44,7 @@
                     <div class="row justify-content-between">
                         <div class="btn btn-light">
                             <h6 class="m-0 font-weight-bold text-primary" id="label-container">Cashflow Health</h6>
+                            <input type="hidden" id="value-filtered-chart" value="Cashflow Health">
                         </div>
 
                         <div class="dropdown">
@@ -61,7 +60,7 @@
                     </div>
                 </div>
                 <!-- Card Body -->
-                <div class="card-body">
+                <div class="card-body" style="height: 500px;">
                     <div class="row justify-content-end" id="filter_date">
                         <input type="hidden" id="value_pick" value="1 Month">
                         <div class="btn btn-light active" id="btn_satu_bulan">
@@ -74,7 +73,10 @@
                             <p class="m-0 font-weight-bold text-primary fa fa-calendar"></p>
                         </div>
                     </div>
-                    <div class="chart-pie pt-4">
+                    <div class="pt-2">
+                        <h5 class="text-capitalize" id="text-total"></h5>
+                    </div>
+                    <div class="chart-pie pt-1" id="container--chart">
                         <div class="chartjs-size-monitor">
                             <div class="chartjs-size-monitor-expand">
                                 <div class=""></div>
@@ -86,7 +88,6 @@
                         <canvas id="myPieChart" width="299" height="253" style="display: block; width: 299px; height: 253px;" class="chartjs-render-monitor">
                         </canvas>
                     </div>
-                    <hr>
                     <p id="caption_pie"></p>
                 </div>
 
@@ -94,6 +95,58 @@
         </div>
     </div>
 </div>
+<?php if (isset($cashflow_list)) { ?>
+    <div class="container-fluid">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Cashflow List</h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <div id="dataTable_wrapper" class="dataTables_wrapper dt-bootstrap4">
+                        <div class="row">
+                            <div class="col-sm-12">
+                                <table class="table table-bordered dataTable" id="dataTable" width="100%" cellspacing="0" role="grid" aria-describedby="dataTable_info" style="width: 100%;">
+                                    <thead>
+                                        <tr role="row">
+                                            <th class="sorting sorting_desc" tabindex="0" aria-controls="dataTable" rowspan="1" colspan="1" aria-label="" aria-sort="descending" style="width: 50px;">No</th>
+                                            <th class="sorting" tabindex="0" aria-controls="dataTable" rowspan="1" colspan="1" aria-label="" style="width: 100px;">Date</th>
+                                            <th class="sorting" tabindex="0" aria-controls="dataTable" rowspan="1" colspan="1" aria-label="" style="width: 150px;">Name</th>
+                                            <th class="sorting" tabindex="0" aria-controls="dataTable" rowspan="1" colspan="1" aria-label="" style="width: 114px;">Type</th>
+                                            <th class="sorting" tabindex="0" aria-controls="dataTable" rowspan="1" colspan="1" aria-label="" style="width: 200px;">Description</th>
+                                            <th class="sorting" tabindex="0" aria-controls="dataTable" rowspan="1" colspan="1" aria-label="" style="width: 107px;">Wallet</th>
+                                            <th class="sorting" tabindex="0" aria-controls="dataTable" rowspan="1" colspan="1" aria-label="" style="width: 96px;">Amount</th>
+                                        </tr>
+                                    </thead>
+
+                                    <tbody>
+                                        <?php
+                                        $i = 1;
+                                        foreach ($cashflow_list as $data) { ?>
+                                            <tr class="odd">
+                                                <td class="sorting_1"><?php echo $i++; ?></td>
+                                                <td><?php echo $data['date']; ?></td>
+                                                <td><?php echo $data['name']; ?></td>
+                                                <td><a href="#" class="<?php echo $data['class']; ?>">
+                                                        <?php echo $data['kategori']; ?>
+                                                    </a></td>
+                                                <td><?php echo $data['keterangan']; ?></td>
+                                                <td class=""><?php echo $data['wallet_name']; ?></td>
+                                                <td><?php echo $data['amount']; ?></td>
+                                            </tr>
+                                        <?php } ?>
+
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+<?php } ?>
+
 <!-- /.container-fluid -->
 
 </div>
@@ -120,7 +173,7 @@
                     <input type="date" class="form-control" id="endDate" placeholder="End Date..">
                 </div>
             </div>
-            <div class="modal-footer">
+            <div class="modal-footer" id="submit_pick">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Tutup</button>
                 <button type="button" class="btn btn-primary" id="btn_simpan_pick" data-dismiss="modal">Simpan</button>
             </div>

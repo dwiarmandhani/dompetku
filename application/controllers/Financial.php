@@ -14,6 +14,32 @@ class Financial extends CI_Controller
     {
         $data['title'] = 'Summary';
         $data['user'] = $this->db->get_where('user', ['email' => $this->session->userdata('email')])->row_array();
+        $id = $data['user']['id'];
+        $cashin = $this->db->limit(10)->get_where('user_cashin', ['user_id' => $id])->result_array();
+        $cashout = $this->db->limit(10)->get_where('user_cashout', ['user_id' => $id])->result_array();
+
+        // Ambil data user_wallet
+
+        // Buat associative array untuk memetakan wallet_id ke wallet_name
+
+        foreach ($cashin as &$data1) {
+            $data1['kategori'] = "cashin";
+            $data1['class'] = "badge badge-success";
+            $user_wallet = $this->db->get_where('user_wallet', ['user_id' => $id, 'id' => $data1['wallet_id']])->row_array();
+            $data1['wallet_name'] = $user_wallet['wallet_name'];
+        }
+
+        foreach ($cashout as &$data2) {
+            $data2['kategori'] = "cashout";
+            $data2['class'] = "badge badge-danger";
+            $user_wallet = $this->db->get_where('user_wallet', ['user_id' => $id, 'id' => $data1['wallet_id']])->row_array();
+            $data2['wallet_name'] = $user_wallet['wallet_name'];
+        }
+
+
+        $combined_data = array_merge($cashin, $cashout);
+
+        $data['cashflow_list'] = $combined_data;
 
         $this->load->view('templates/header', $data);
         $this->load->view('templates/sidebar', $data);
@@ -44,8 +70,18 @@ class Financial extends CI_Controller
 
             $monthlyTotal[$month - 1] += $amount; // Mengakses indeks array sesuai bulan dan menambahkan jumlah
         }
+        $maxIncome = max($monthlyTotal);
+        $indexOfMaxIncome = array_search($maxIncome, $monthlyTotal);
 
+        // Konversi indeks bulan menjadi nama bulan
+        $monthNames = [
+            "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+            "Juli", "Agustus", "September", "Oktober", "November", "Desember"
+        ];
+
+        $monthWithMaxIncome = $monthNames[$indexOfMaxIncome];
         $hasilData['monthlyTotal_cashin'] = $monthlyTotal;
+        $hasilData['message_cashin'] = 'Penghasilan terbesar Anda ada di bulan ' . '<b>' . $monthWithMaxIncome . '</b>';
         /** end of cashin summary grafik */
 
         /** cashout summary grafik */
@@ -66,8 +102,14 @@ class Financial extends CI_Controller
 
             $monthlyTotalCashout[$month - 1] += $amount; // Mengakses indeks array sesuai bulan dan menambahkan jumlah
         }
+        $maxOutcome = max($monthlyTotalCashout);
+        $indexOfMaxOutcome = array_search($maxOutcome, $monthlyTotalCashout);
+
+        $monthWithMaxOutcome = $monthNames[$indexOfMaxOutcome];
 
         $hasilData['monthlyTotal_cashout'] = $monthlyTotalCashout;
+        $hasilData['message_cashout'] = 'Pengeluaran terbesarmu ada di bulan ' . '<b>' . $monthWithMaxOutcome . '</b>';
+
         /** end of cashout summary grafik */
 
         echo json_encode($hasilData);
@@ -140,7 +182,76 @@ class Financial extends CI_Controller
 
         $data['highestIncomeCategory'] = $highestIncomeCategory;
         $data['highestIncomeAmount'] = $highestIncomeAmount;
+        return $data;
+    }
+    public function categoryCashout($user_id, $transactions, $startDate, $endDate)
+    {
+        $filteredTransactionsCategory = [];
+        $filteredTransactionsAmount = [];
+        $categoryCategoryTotals = []; // Initialize an array to store category income totals
 
+        foreach ($transactions as $transaction) {
+            $transactionDate = date('Y-m-d', strtotime($transaction['date']));
+
+            // Mengubah tanggal menjadi objek DateTime
+            $transactionDateTime = new DateTime($transactionDate);
+            $startDateTime = new DateTime($startDate);
+            $endDateTime = new DateTime($endDate);
+
+            // Memeriksa apakah tanggal transaksi berada dalam rentang yang benar
+            if ($transactionDateTime >= $startDateTime && $transactionDateTime <= $endDateTime) {
+                $category = $this->db->get_where('user_category_list', ['user_id' => $user_id, 'id' => intval($transaction['category_id'])])->row_array();
+                $categoryName = $category['category_name'];
+                $categoryAmount = $transaction['amount'];
+
+                // Add the amount to the category's total income
+                if (!isset($categoryCategoryTotals[$categoryName])) {
+                    $categoryCategoryTotals[$categoryName] = 0;
+                }
+                $categoryCategoryTotals[$categoryName] += $categoryAmount;
+
+                $filteredTransactionsCategory[] = $categoryName;
+                $filteredTransactionsAmount[] = $categoryAmount;
+            }
+        }
+
+        $data['data'] = ['filteredTransactionsCategory' => $filteredTransactionsCategory, 'filteredTransactionsAmount' => $filteredTransactionsAmount];
+
+        // Find the category with the highest income
+        $highestCategoryCategory = '';
+        $highestCategoryAmount = 0;
+
+        foreach ($categoryCategoryTotals as $category => $total) {
+            if ($total > $highestCategoryAmount) {
+                $highestCategoryCategory = $category;
+                $highestCategoryAmount = $total;
+            }
+        }
+
+        $data['highestCategoryCategory'] = $highestCategoryCategory;
+        $data['highestCategoryAmount'] = $highestCategoryAmount;
+        return $data;
+    }
+    public function generateCategoryColor($category)
+    {
+        $backgroundColor = [];
+        $hoverBackgroundColor = [];
+        foreach ($category as $color) {
+            // Generate random colors in hexadecimal format
+            $bgColor = '#' . str_pad(dechex(mt_rand(0, 255)), 2, '0', STR_PAD_LEFT) .
+                str_pad(dechex(mt_rand(0, 255)), 2, '0', STR_PAD_LEFT) .
+                str_pad(dechex(mt_rand(0, 255)), 2, '0', STR_PAD_LEFT);
+
+            $hoverBgColor = '#' . str_pad(dechex(mt_rand(0, 255)), 2, '0', STR_PAD_LEFT) .
+                str_pad(dechex(mt_rand(0, 255)), 2, '0', STR_PAD_LEFT) .
+                str_pad(dechex(mt_rand(0, 255)), 2, '0', STR_PAD_LEFT);
+
+            // Store the generated colors in arrays
+            $backgroundColor[] = $bgColor;
+            $hoverBackgroundColor[] = $hoverBgColor;
+        }
+        $data['backgroundColor'] = $backgroundColor;
+        $data['hoverColor'] = $hoverBackgroundColor;
         return $data;
     }
     public function filteredCategoryGraphic()
@@ -246,18 +357,275 @@ class Financial extends CI_Controller
             $arrayCashin = $this->categoryCashin($id, $cashin, $startDateOne, $endDateOne);
             $filteredCategory = $arrayCashin['data']['filteredTransactionsCategory'];
             $filteredAmount = $arrayCashin['data']['filteredTransactionsAmount'];
+
+            $categoryTotals = []; // Inisialisasi array untuk menyimpan total uang per kategori
+            $resultArrayCategory = [];
+            $resultArrayCashinCategory = [];
+
+            foreach ($filteredCategory as $index => $category) {
+                $cashin = intval($filteredAmount[$index]); // Mengonversi jumlah uang menjadi integer
+
+                // Memeriksa apakah kategori sudah ada dalam $categoryTotals
+                if (isset($categoryTotals[$category])) {
+                    // Jika sudah ada, tambahkan jumlah uang ke total yang sudah ada
+                    $categoryTotals[$category] += $cashin;
+                } else {
+                    // Jika belum ada, inisialisasi total untuk kategori tersebut
+                    $categoryTotals[$category] = $cashin;
+                }
+            }
+
+            // Mengisi hasil ke array yang sesuai
+            foreach ($categoryTotals as $category => $total) {
+                $resultArrayCategory[] = $category;
+                $resultArrayCashinCategory[] = strval($total); // Mengonversi total kategori menjadi string
+            }
+            $generateColor = $this->generateCategoryColor($resultArrayCategory);
+
             $result = [
                 'start_date' => $startDateOne,
                 'end_date' => $endDateOne,
                 'total_cashin' => $totalCashin,
-                'arrayCashinCategory' => $filteredAmount,
-                'arrayCategory' => $filteredCategory,
+                'arrayCashinCategory' => $resultArrayCashinCategory,
+                'arrayCategory' => $resultArrayCategory,
                 'highestIncomeCategory' => $arrayCashin['highestIncomeCategory'],
                 'highestIncomeAmount' => $arrayCashin['highestIncomeAmount'],
+                'backgroundColor' => $generateColor['backgroundColor'],
+                'hoverColor' => $generateColor['hoverColor'],
                 'message' => $arrayCashin['highestIncomeCategory'] . ' menjadi penghasilan terbesarmu, dengan nilai Rp. ' . $arrayCashin['highestIncomeAmount'] . ' , semangat kerjanya kawan!',
             ];
         } else if ($pilihWaktu === '3 Month') {
+            $endDateOne = date('Y-m-d'); // Tanggal saat ini
+            $startDateOne = date('Y-m-d', strtotime('-3 months', strtotime($endDateOne)));
+            $totalCashin = $this->calculateTotalForDateRange($cashin, $startDateOne, $endDateOne);
+            $arrayCashin = $this->categoryCashin($id, $cashin, $startDateOne, $endDateOne);
+            $filteredCategory = $arrayCashin['data']['filteredTransactionsCategory'];
+            $filteredAmount = $arrayCashin['data']['filteredTransactionsAmount'];
+
+            $categoryTotals = []; // Inisialisasi array untuk menyimpan total uang per kategori
+            $resultArrayCategory = [];
+            $resultArrayCashinCategory = [];
+
+            foreach ($filteredCategory as $index => $category) {
+                $cashin = intval($filteredAmount[$index]); // Mengonversi jumlah uang menjadi integer
+
+                // Memeriksa apakah kategori sudah ada dalam $categoryTotals
+                if (isset($categoryTotals[$category])) {
+                    // Jika sudah ada, tambahkan jumlah uang ke total yang sudah ada
+                    $categoryTotals[$category] += $cashin;
+                } else {
+                    // Jika belum ada, inisialisasi total untuk kategori tersebut
+                    $categoryTotals[$category] = $cashin;
+                }
+            }
+
+            // Mengisi hasil ke array yang sesuai
+            foreach ($categoryTotals as $category => $total) {
+                $resultArrayCategory[] = $category;
+                $resultArrayCashinCategory[] = strval($total); // Mengonversi total kategori menjadi string
+            }
+            $generateColor = $this->generateCategoryColor($resultArrayCategory);
+
+            $result = [
+                'start_date' => $startDateOne,
+                'end_date' => $endDateOne,
+                'total_cashin' => $totalCashin,
+                'arrayCashinCategory' => $resultArrayCashinCategory,
+                'arrayCategory' => $resultArrayCategory,
+                'highestIncomeCategory' => $arrayCashin['highestIncomeCategory'],
+                'highestIncomeAmount' => $arrayCashin['highestIncomeAmount'],
+                'backgroundColor' => $generateColor['backgroundColor'],
+                'hoverColor' => $generateColor['hoverColor'],
+                'message' => $arrayCashin['highestIncomeCategory'] . ' menjadi penghasilan terbesarmu, dengan nilai Rp. ' . $arrayCashin['highestIncomeAmount'] . ' , semangat kerjanya kawan!',
+            ];
         } else if ($pilihWaktu === 'custom_date') {
+            $endDateOne = $_GET['endDate'];
+            $startDateOne = $_GET['startDate'];
+            $totalCashin = $this->calculateTotalForDateRange($cashin, $startDateOne, $endDateOne);
+            $arrayCashin = $this->categoryCashin($id, $cashin, $startDateOne, $endDateOne);
+            $filteredCategory = $arrayCashin['data']['filteredTransactionsCategory'];
+            $filteredAmount = $arrayCashin['data']['filteredTransactionsAmount'];
+
+            $categoryTotals = []; // Inisialisasi array untuk menyimpan total uang per kategori
+            $resultArrayCategory = [];
+            $resultArrayCashinCategory = [];
+
+            foreach ($filteredCategory as $index => $category) {
+                $cashin = intval($filteredAmount[$index]); // Mengonversi jumlah uang menjadi integer
+
+                // Memeriksa apakah kategori sudah ada dalam $categoryTotals
+                if (isset($categoryTotals[$category])) {
+                    // Jika sudah ada, tambahkan jumlah uang ke total yang sudah ada
+                    $categoryTotals[$category] += $cashin;
+                } else {
+                    // Jika belum ada, inisialisasi total untuk kategori tersebut
+                    $categoryTotals[$category] = $cashin;
+                }
+            }
+
+            // Mengisi hasil ke array yang sesuai
+            foreach ($categoryTotals as $category => $total) {
+                $resultArrayCategory[] = $category;
+                $resultArrayCashinCategory[] = strval($total); // Mengonversi total kategori menjadi string
+            }
+            $generateColor = $this->generateCategoryColor($resultArrayCategory);
+
+            $result = [
+                'start_date' => $startDateOne,
+                'end_date' => $endDateOne,
+                'total_cashin' => $totalCashin,
+                'arrayCashinCategory' => $resultArrayCashinCategory,
+                'arrayCategory' => $resultArrayCategory,
+                'highestIncomeCategory' => $arrayCashin['highestIncomeCategory'],
+                'highestIncomeAmount' => $arrayCashin['highestIncomeAmount'],
+                'backgroundColor' => $generateColor['backgroundColor'],
+                'hoverColor' => $generateColor['hoverColor'],
+                'message' => $arrayCashin['highestIncomeCategory'] . ' menjadi penghasilan terbesarmu, dengan nilai Rp. ' . $arrayCashin['highestIncomeAmount'] . ' , semangat kerjanya kawan!',
+            ];
+        }
+        echo json_encode($result);
+    }
+    public function filteredCashoutGraphic()
+    {
+        $data['user'] = $this->db->get_where('user', ['email' => $this->session->userdata('email')])->row_array();
+        $id = $data['user']['id'];
+        $hasilData['cashout'] = $this->db->get_where('user_cashout', ['user_id' => $id])->result_array();
+        $cashout = $hasilData['cashout'];
+
+        $pilihWaktu = $_GET['pickMonth'];
+
+        if ($pilihWaktu === '1 Month') {
+            $endDateOne = date('Y-m-d'); // Tanggal saat ini
+            $startDateOne = date('Y-m-d', strtotime('-1 months', strtotime($endDateOne)));
+            $totalCashout = $this->calculateTotalForDateRange($cashout, $startDateOne, $endDateOne);
+            $arrayCashout = $this->categoryCashout($id, $cashout, $startDateOne, $endDateOne);
+            $filteredCategory = $arrayCashout['data']['filteredTransactionsCategory'];
+            $filteredAmount = $arrayCashout['data']['filteredTransactionsAmount'];
+
+            $categoryTotals = []; // Inisialisasi array untuk menyimpan total uang per kategori
+            $resultArrayCategory = [];
+            $resultArrayCashoutCategory = [];
+
+            foreach ($filteredCategory as $index => $category) {
+                $cashin = intval($filteredAmount[$index]); // Mengonversi jumlah uang menjadi integer
+
+                // Memeriksa apakah kategori sudah ada dalam $categoryTotals
+                if (isset($categoryTotals[$category])) {
+                    // Jika sudah ada, tambahkan jumlah uang ke total yang sudah ada
+                    $categoryTotals[$category] += $cashin;
+                } else {
+                    // Jika belum ada, inisialisasi total untuk kategori tersebut
+                    $categoryTotals[$category] = $cashin;
+                }
+            }
+
+            // Mengisi hasil ke array yang sesuai
+            foreach ($categoryTotals as $category => $total) {
+                $resultArrayCategory[] = $category;
+                $resultArrayCashoutCategory[] = strval($total); // Mengonversi total kategori menjadi string
+            }
+            $generateColor = $this->generateCategoryColor($resultArrayCategory);
+
+            $result = [
+                'start_date' => $startDateOne,
+                'end_date' => $endDateOne,
+                'total_cashout' => $totalCashout,
+                'arrayCashoutCategory' => $resultArrayCashoutCategory,
+                'arrayCategory' => $resultArrayCategory,
+                'highestCategoryCategory' => $arrayCashout['highestCategoryCategory'],
+                'highestCategoryAmount' => $arrayCashout['highestCategoryAmount'],
+                'backgroundColor' => $generateColor['backgroundColor'],
+                'hoverColor' => $generateColor['hoverColor'],
+                'message' => $arrayCashout['highestCategoryCategory'] . ' menjadi pengeluaran terbesarmu, dengan nilai Rp. ' . $arrayCashout['highestCategoryAmount'] . ' , semangat kerjanya kawan!',
+            ];
+        } else if ($pilihWaktu === '3 Month') {
+            $endDateOne = date('Y-m-d'); // Tanggal saat ini
+            $startDateOne = date('Y-m-d', strtotime('-3 months', strtotime($endDateOne)));
+            $totalCashout = $this->calculateTotalForDateRange($cashout, $startDateOne, $endDateOne);
+            $arrayCashout = $this->categoryCashout($id, $cashout, $startDateOne, $endDateOne);
+            $filteredCategory = $arrayCashout['data']['filteredTransactionsCategory'];
+            $filteredAmount = $arrayCashout['data']['filteredTransactionsAmount'];
+
+            $categoryTotals = []; // Inisialisasi array untuk menyimpan total uang per kategori
+            $resultArrayCategory = [];
+            $resultArrayCashoutCategory = [];
+
+            foreach ($filteredCategory as $index => $category) {
+                $cashin = intval($filteredAmount[$index]); // Mengonversi jumlah uang menjadi integer
+
+                // Memeriksa apakah kategori sudah ada dalam $categoryTotals
+                if (isset($categoryTotals[$category])) {
+                    // Jika sudah ada, tambahkan jumlah uang ke total yang sudah ada
+                    $categoryTotals[$category] += $cashin;
+                } else {
+                    // Jika belum ada, inisialisasi total untuk kategori tersebut
+                    $categoryTotals[$category] = $cashin;
+                }
+            }
+
+            // Mengisi hasil ke array yang sesuai
+            foreach ($categoryTotals as $category => $total) {
+                $resultArrayCategory[] = $category;
+                $resultArrayCashoutCategory[] = strval($total); // Mengonversi total kategori menjadi string
+            }
+            $generateColor = $this->generateCategoryColor($resultArrayCategory);
+
+            $result = [
+                'start_date' => $startDateOne,
+                'end_date' => $endDateOne,
+                'total_cashout' => $totalCashout,
+                'arrayCashoutCategory' => $resultArrayCashoutCategory,
+                'arrayCategory' => $resultArrayCategory,
+                'highestCategoryCategory' => $arrayCashout['highestCategoryCategory'],
+                'highestCategoryAmount' => $arrayCashout['highestCategoryAmount'],
+                'backgroundColor' => $generateColor['backgroundColor'],
+                'hoverColor' => $generateColor['hoverColor'],
+                'message' => $arrayCashout['highestCategoryCategory'] . ' menjadi pengeluaran terbesarmu, dengan nilai Rp. ' . $arrayCashout['highestCategoryAmount'] . ' , semangat kerjanya kawan!',
+            ];
+        } else if ($pilihWaktu === 'custom_date') {
+            $endDateOne = $_GET['endDate'];
+            $startDateOne = $_GET['startDate'];
+            $totalCashout = $this->calculateTotalForDateRange($cashout, $startDateOne, $endDateOne);
+            $arrayCashout = $this->categoryCashout($id, $cashout, $startDateOne, $endDateOne);
+            $filteredCategory = $arrayCashout['data']['filteredTransactionsCategory'];
+            $filteredAmount = $arrayCashout['data']['filteredTransactionsAmount'];
+
+            $categoryTotals = []; // Inisialisasi array untuk menyimpan total uang per kategori
+            $resultArrayCategory = [];
+            $resultArrayCashoutCategory = [];
+
+            foreach ($filteredCategory as $index => $category) {
+                $cashin = intval($filteredAmount[$index]); // Mengonversi jumlah uang menjadi integer
+
+                // Memeriksa apakah kategori sudah ada dalam $categoryTotals
+                if (isset($categoryTotals[$category])) {
+                    // Jika sudah ada, tambahkan jumlah uang ke total yang sudah ada
+                    $categoryTotals[$category] += $cashin;
+                } else {
+                    // Jika belum ada, inisialisasi total untuk kategori tersebut
+                    $categoryTotals[$category] = $cashin;
+                }
+            }
+
+            // Mengisi hasil ke array yang sesuai
+            foreach ($categoryTotals as $category => $total) {
+                $resultArrayCategory[] = $category;
+                $resultArrayCashoutCategory[] = strval($total); // Mengonversi total kategori menjadi string
+            }
+            $generateColor = $this->generateCategoryColor($resultArrayCategory);
+
+            $result = [
+                'start_date' => $startDateOne,
+                'end_date' => $endDateOne,
+                'total_cashout' => $totalCashout,
+                'arrayCashoutCategory' => $resultArrayCashoutCategory,
+                'arrayCategory' => $resultArrayCategory,
+                'highestCategoryCategory' => $arrayCashout['highestCategoryCategory'],
+                'highestCategoryAmount' => $arrayCashout['highestCategoryAmount'],
+                'backgroundColor' => $generateColor['backgroundColor'],
+                'hoverColor' => $generateColor['hoverColor'],
+                'message' => $arrayCashout['highestCategoryCategory'] . ' menjadi pengeluaran terbesarmu, dengan nilai Rp. ' . $arrayCashout['highestCategoryAmount'] . ' , semangat kerjanya kawan!',
+            ];
         }
         echo json_encode($result);
     }

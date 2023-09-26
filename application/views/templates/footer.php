@@ -49,7 +49,10 @@
 <script src="<?php echo base_url('assets'); ?>/js/sb-admin-2.min.js"></script>
 <!-- Page level plugins -->
 <script src="<?php echo base_url('assets'); ?>/vendor/chart.js/Chart.min.js"></script>
+<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.21/js/jquery.dataTables.js"></script>
 <script src="<?php echo base_url('node_modules'); ?>/sweetalert2/dist/sweetalert2.all.min.js"></script>
+<!-- Letakkan kode JavaScript di bawah kode HTML Anda -->
+
 <script>
     $('.custom-file-input').on('change', function() {
         let fileName = $(this).val().split('\\').pop();
@@ -387,6 +390,7 @@
                     }
                 }
             });
+            document.getElementById('caption_myAreaChart').innerHTML = t.message_cashin;
         }
     });
 
@@ -531,6 +535,8 @@
                             }
                         }
                     });
+                    document.getElementById('caption_myAreaChart').innerHTML = t.message_cashin;
+
                 }, 100);
             }
         });
@@ -681,6 +687,8 @@
                             }
                         }
                     });
+                    document.getElementById('caption_myAreaChart').innerHTML = t.message_cashout;
+
                 }, 100);
 
             }
@@ -693,7 +701,7 @@
     $(document).ready(function() {
         /** start of chart default */
         function defaultHtmlChartPie() {
-            var label = $('#label-container').text('Cash-in Flow');
+            var label = $('#label-container').text('Cash-in Health');
             var activeOneMonth = $('#btn_satu_bulan').addClass('active');
             var activeOneMonth = $('#btn_tiga_bulan').removeClass('active');
             var activeOneMonth = $('#btn_custom_bulan').removeClass('active');
@@ -723,6 +731,24 @@
                     var pieArray = [];
                     pieArray.push(response.total_cashout);
                     pieArray.push(response.selisih_cashin);
+
+                    var element = document.getElementById("myPieChart");
+                    if (element) {
+                        element.parentNode.removeChild(element);
+                    }
+                    var containerElements = document.getElementsByClassName("chart-pie"); // Gantilah "container" dengan ID elemen yang sesuai
+                    for (var i = 0; i < containerElements.length; i++) {
+                        var newCanvas = document.createElement("canvas");
+                        newCanvas.id = "myPieChart";
+                        newCanvas.width = 299;
+                        newCanvas.height = 253;
+                        newCanvas.classList.add("chartjs-render-monitor");
+
+                        // Anda dapat menambahkan atribut atau gaya tambahan jika diperlukan
+
+                        // Menambahkan elemen canvas yang baru ke elemen saat ini dalam iterasi
+                        containerElements[i].appendChild(newCanvas);
+                    }
 
                     Chart.defaults.global.defaultFontFamily = 'Nunito', '-apple-system,system-ui,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif';
                     Chart.defaults.global.defaultFontColor = '#858796';
@@ -760,6 +786,8 @@
 
                     var pieCaption = document.getElementById('caption_pie');
                     pieCaption.innerHTML = 'Kondisi keuanganmu sejak ' + '<b>' + teksTanggal + '</b>' + ' sampai dengan hari ini. ' + '<b>' + response.message + '</b>';
+                    var total_cashin = document.getElementById('text-total');
+                    total_cashin.innerText = 'Total : Rp. ' + response.total_cashin;
                 }
             });
 
@@ -850,6 +878,8 @@
 
                         var pieCaption = document.getElementById('caption_pie');
                         pieCaption.innerHTML = 'Kondisi keuanganmu sejak ' + '<b>' + teksTanggal + '</b>' + ' sampai dengan hari ini. ' + '<b>' + response.message + '</b>';
+                        var total_cashin = document.getElementById('text-total');
+                        total_cashin.innerText = 'Total : Rp. ' + response.total_cashin;
                     }
                 });
 
@@ -941,6 +971,8 @@
 
                         var pieCaption = document.getElementById('caption_pie');
                         pieCaption.innerHTML = 'Kondisi keuanganmu sejak ' + '<b>' + teksTanggal + '</b>' + ' sampai dengan hari ini. ' + '<b>' + response.message + '</b>';
+                        var total_cashin = document.getElementById('text-total');
+                        total_cashin.innerText = 'Total : Rp. ' + response.total_cashin;
                     }
                 });
             })
@@ -960,6 +992,17 @@
                         icon: 'error',
                         title: 'Oops...',
                         text: 'Please input Field!',
+                    })
+                    return false;
+                }
+                var startDateObj = new Date(startDate);
+                var endDateObj = new Date(endDate);
+
+                if (startDateObj > endDateObj) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Oops...',
+                        text: 'Start Date cannot be greater than end date!',
                     })
                     return false;
                 }
@@ -1045,18 +1088,18 @@
 
                         var pieCaption = document.getElementById('caption_pie');
                         pieCaption.innerHTML = 'Kondisi keuanganmu sejak ' + '<b>' + teksTanggal + '</b>' + ' sampai dengan hari ini. ' + '<b>' + response.message + '</b>';
+                        var total_cashin = document.getElementById('text-total');
+                        total_cashin.innerText = 'Total : Rp. ' + response.total_cashin;
                     }
                 });
             })
         }
-        defaultHtmlChartPie();
-        /** end of chart default */
 
         function htmlChartCashin() {
             var label = $('#label-container').text('Cash-in Flow');
-            var activeOneMonth = $('#btn_satu_bulan').addClass('active');
-            var activeOneMonth = $('#btn_tiga_bulan').removeClass('active');
-            var activeOneMonth = $('#btn_custom_bulan').removeClass('active');
+            var activeOneMonth = $('#btn_satu_bulan_cashin').addClass('active');
+            var activeOneMonth = $('#btn_tiga_bulan_cashin').removeClass('active');
+            var activeOneMonth = $('#btn_custom_bulan_cashin').removeClass('active');
             var valuePick = $("#value_pick").val();
 
             $.ajax({
@@ -1067,20 +1110,688 @@
                 },
                 dataType: "json",
                 success: function(response) {
+                    var element = document.getElementById("myPieChart");
+                    if (element) {
+                        element.parentNode.removeChild(element);
+                    }
+                    var containerElements = document.getElementsByClassName("chart-pie"); // Gantilah "container" dengan ID elemen yang sesuai
+                    for (var i = 0; i < containerElements.length; i++) {
+                        var newCanvas = document.createElement("canvas");
+                        newCanvas.id = "myPieChart";
+                        newCanvas.width = 299;
+                        newCanvas.height = 253;
+                        newCanvas.classList.add("chartjs-render-monitor");
 
-                    console.log(response)
+                        // Anda dapat menambahkan atribut atau gaya tambahan jika diperlukan
+
+                        // Menambahkan elemen canvas yang baru ke elemen saat ini dalam iterasi
+                        containerElements[i].appendChild(newCanvas);
+                    }
+                    Chart.defaults.global.defaultFontFamily = 'Nunito', '-apple-system,system-ui,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif';
+                    Chart.defaults.global.defaultFontColor = '#858796';
+
+                    var pieChart = document.getElementById("myPieChart");
+                    var myPieChart = new Chart(pieChart, {
+                        type: 'doughnut',
+                        data: {
+                            labels: response.arrayCategory,
+                            datasets: [{
+                                data: response.arrayCashinCategory,
+                                backgroundColor: response.backgroundColor,
+                                hoverBackgroundColor: response.hoverColor,
+                                hoverBorderColor: "rgba(234, 236, 244, 1)",
+                            }],
+                        },
+                        options: {
+                            maintainAspectRatio: false,
+                            tooltips: {
+                                backgroundColor: "rgb(255,255,255)",
+                                bodyFontColor: "#858796",
+                                borderColor: '#dddfeb',
+                                borderWidth: 1,
+                                xPadding: 15,
+                                yPadding: 15,
+                                displayColors: false,
+                                caretPadding: 10,
+                            },
+                            legend: {
+                                display: false
+                            },
+                            cutoutPercentage: 80,
+                        },
+                    });
+
+                    var pieCaption = document.getElementById('caption_pie');
+                    pieCaption.innerHTML = response.message;
+                    var textTotal = document.getElementById('text-total');
+                    textTotal.innerHTML = 'Total Cash-in : Rp. ' + response.total_cashin;
+
                 }
+            });
+
+            $('#btn_satu_bulan_cashin').on('click', function() {
+                $("#btn_satu_bulan_cashin").addClass("active");
+                $("#btn_tiga_bulan_cashin").removeClass("active");
+                $("#btn_custom_bulan_cashin").removeClass("active");
+                $("#value_pick").val("1 Month");
+
+                var valuePick = $("#value_pick").val();
+
+                $.ajax({
+                    url: "<?php echo base_url('financial/filteredCashinGraphic/') ?>",
+                    type: "GET",
+                    data: {
+                        pickMonth: valuePick,
+                    },
+                    dataType: "json",
+                    success: function(response) {
+                        var element = document.getElementById("myPieChart");
+                        if (element) {
+                            element.parentNode.removeChild(element);
+                        }
+                        var containerElements = document.getElementsByClassName("chart-pie"); // Gantilah "container" dengan ID elemen yang sesuai
+                        for (var i = 0; i < containerElements.length; i++) {
+                            var newCanvas = document.createElement("canvas");
+                            newCanvas.id = "myPieChart";
+                            newCanvas.width = 299;
+                            newCanvas.height = 253;
+                            newCanvas.classList.add("chartjs-render-monitor");
+
+                            // Anda dapat menambahkan atribut atau gaya tambahan jika diperlukan
+
+                            // Menambahkan elemen canvas yang baru ke elemen saat ini dalam iterasi
+                            containerElements[i].appendChild(newCanvas);
+
+                        }
+                        Chart.defaults.global.defaultFontFamily = 'Nunito', '-apple-system,system-ui,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif';
+                        Chart.defaults.global.defaultFontColor = '#858796';
+
+                        var pieChart = document.getElementById("myPieChart");
+                        var myPieChart = new Chart(pieChart, {
+                            type: 'doughnut',
+                            data: {
+                                labels: response.arrayCategory,
+                                datasets: [{
+                                    data: response.arrayCashinCategory,
+                                    backgroundColor: response.backgroundColor,
+                                    hoverBackgroundColor: response.hoverColor,
+                                    hoverBorderColor: "rgba(234, 236, 244, 1)",
+                                }],
+                            },
+                            options: {
+                                maintainAspectRatio: false,
+                                tooltips: {
+                                    backgroundColor: "rgb(255,255,255)",
+                                    bodyFontColor: "#858796",
+                                    borderColor: '#dddfeb',
+                                    borderWidth: 1,
+                                    xPadding: 15,
+                                    yPadding: 15,
+                                    displayColors: false,
+                                    caretPadding: 10,
+                                },
+                                legend: {
+                                    display: false
+                                },
+                                cutoutPercentage: 80,
+                            },
+                        });
+
+                        var pieCaption = document.getElementById('caption_pie');
+                        pieCaption.innerHTML = response.message;
+                        var textTotal = document.getElementById('text-total');
+                        textTotal.innerHTML = 'Total Cash-in : Rp. ' + response.total_cashin;
+
+                    }
+                })
+            })
+            $('#btn_tiga_bulan_cashin').on('click', function() {
+                $("#btn_satu_bulan_cashin").removeClass("active");
+                $("#btn_tiga_bulan_cashin").addClass("active");
+                $("#btn_custom_bulan_cashin").removeClass("active");
+                $("#value_pick").val("3 Month");
+
+                var valuePick = $("#value_pick").val();
+
+                $.ajax({
+                    url: "<?php echo base_url('financial/filteredCashinGraphic/') ?>",
+                    type: "GET",
+                    data: {
+                        pickMonth: valuePick,
+                    },
+                    dataType: "json",
+                    success: function(response) {
+                        var element = document.getElementById("myPieChart");
+                        if (element) {
+                            element.parentNode.removeChild(element);
+                        }
+                        var containerElements = document.getElementsByClassName("chart-pie"); // Gantilah "container" dengan ID elemen yang sesuai
+                        for (var i = 0; i < containerElements.length; i++) {
+                            var newCanvas = document.createElement("canvas");
+                            newCanvas.id = "myPieChart";
+                            newCanvas.width = 299;
+                            newCanvas.height = 253;
+                            newCanvas.classList.add("chartjs-render-monitor");
+
+                            // Anda dapat menambahkan atribut atau gaya tambahan jika diperlukan
+
+                            // Menambahkan elemen canvas yang baru ke elemen saat ini dalam iterasi
+                            containerElements[i].appendChild(newCanvas);
+
+                        }
+                        Chart.defaults.global.defaultFontFamily = 'Nunito', '-apple-system,system-ui,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif';
+                        Chart.defaults.global.defaultFontColor = '#858796';
+
+                        var pieChart = document.getElementById("myPieChart");
+                        var myPieChart = new Chart(pieChart, {
+                            type: 'doughnut',
+                            data: {
+                                labels: response.arrayCategory,
+                                datasets: [{
+                                    data: response.arrayCashinCategory,
+                                    backgroundColor: response.backgroundColor,
+                                    hoverBackgroundColor: response.hoverColor,
+                                    hoverBorderColor: "rgba(234, 236, 244, 1)",
+                                }],
+                            },
+                            options: {
+                                maintainAspectRatio: false,
+                                tooltips: {
+                                    backgroundColor: "rgb(255,255,255)",
+                                    bodyFontColor: "#858796",
+                                    borderColor: '#dddfeb',
+                                    borderWidth: 1,
+                                    xPadding: 15,
+                                    yPadding: 15,
+                                    displayColors: false,
+                                    caretPadding: 10,
+                                },
+                                legend: {
+                                    display: false
+                                },
+                                cutoutPercentage: 80,
+                            },
+                        });
+
+                        var pieCaption = document.getElementById('caption_pie');
+                        pieCaption.innerHTML = response.message;
+                        var textTotal = document.getElementById('text-total');
+                        textTotal.innerHTML = 'Total Cash-in : Rp. ' + response.total_cashin;
+
+                    }
+                })
+            })
+            $('#btn_simpan_pick_cashin').on('click', function() {
+                $("#btn_satu_bulan_cashin").removeClass("active");
+                $("#btn_tiga_bulan_cashin").removeClass("active");
+                $("#btn_custom_bulan_cashin").addClass("active");
+                $("#value_pick").val("custom_date");
+
+                var valuePick = $("#value_pick").val();
+                var startDate = $('#startDate').val();
+                var endDate = $('#endDate').val();
+
+                if (startDate === '' || endDate === '') {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Oops...',
+                        text: 'Please input Field!',
+                    })
+                    return false;
+                }
+                var startDateObj = new Date(startDate);
+                var endDateObj = new Date(endDate);
+
+                if (startDateObj > endDateObj) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Oops...',
+                        text: 'Start Date cannot be greater than end date!',
+                    })
+                    return false;
+                }
+
+                $.ajax({
+                    url: "<?php echo base_url('financial/filteredCashinGraphic/') ?>",
+                    type: "GET",
+                    data: {
+                        pickMonth: valuePick,
+                        startDate: startDate,
+                        endDate: endDate,
+                    },
+                    dataType: "json",
+                    success: function(response) {
+                        var element = document.getElementById("myPieChart");
+                        if (element) {
+                            element.parentNode.removeChild(element);
+                        }
+                        var containerElements = document.getElementsByClassName("chart-pie"); // Gantilah "container" dengan ID elemen yang sesuai
+                        for (var i = 0; i < containerElements.length; i++) {
+                            var newCanvas = document.createElement("canvas");
+                            newCanvas.id = "myPieChart";
+                            newCanvas.width = 299;
+                            newCanvas.height = 253;
+                            newCanvas.classList.add("chartjs-render-monitor");
+
+                            // Anda dapat menambahkan atribut atau gaya tambahan jika diperlukan
+
+                            // Menambahkan elemen canvas yang baru ke elemen saat ini dalam iterasi
+                            containerElements[i].appendChild(newCanvas);
+
+                        }
+                        Chart.defaults.global.defaultFontFamily = 'Nunito', '-apple-system,system-ui,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif';
+                        Chart.defaults.global.defaultFontColor = '#858796';
+
+                        var pieChart = document.getElementById("myPieChart");
+                        var myPieChart = new Chart(pieChart, {
+                            type: 'doughnut',
+                            data: {
+                                labels: response.arrayCategory,
+                                datasets: [{
+                                    data: response.arrayCashinCategory,
+                                    backgroundColor: response.backgroundColor,
+                                    hoverBackgroundColor: response.hoverColor,
+                                    hoverBorderColor: "rgba(234, 236, 244, 1)",
+                                }],
+                            },
+                            options: {
+                                maintainAspectRatio: false,
+                                tooltips: {
+                                    backgroundColor: "rgb(255,255,255)",
+                                    bodyFontColor: "#858796",
+                                    borderColor: '#dddfeb',
+                                    borderWidth: 1,
+                                    xPadding: 15,
+                                    yPadding: 15,
+                                    displayColors: false,
+                                    caretPadding: 10,
+                                },
+                                legend: {
+                                    display: false
+                                },
+                                cutoutPercentage: 80,
+                            },
+                        });
+
+                        var pieCaption = document.getElementById('caption_pie');
+                        pieCaption.innerHTML = response.message;
+                        var textTotal = document.getElementById('text-total');
+                        textTotal.innerHTML = 'Total Cash-in : Rp. ' + response.total_cashin;
+
+                    }
+                })
             })
 
         }
 
+        function htmlChartCashout() {
+            var label = $('#label-container').text('Cash-out Flow');
+            var activeOneMonth = $('#btn_satu_bulan_cashout').addClass('active');
+            var activeOneMonth = $('#btn_tiga_bulan_cashout').removeClass('active');
+            var activeOneMonth = $('#btn_custom_bulan_cashout').removeClass('active');
+            var valuePick = $("#value_pick").val();
+
+            $.ajax({
+                url: "<?php echo base_url('financial/filteredCashoutGraphic/') ?>",
+                type: "GET",
+                data: {
+                    pickMonth: valuePick
+                },
+                dataType: "json",
+                success: function(response) {
+                    var element = document.getElementById("myPieChart");
+                    if (element) {
+                        element.parentNode.removeChild(element);
+                    }
+                    var containerElements = document.getElementsByClassName("chart-pie"); // Gantilah "container" dengan ID elemen yang sesuai
+                    for (var i = 0; i < containerElements.length; i++) {
+                        var newCanvas = document.createElement("canvas");
+                        newCanvas.id = "myPieChart";
+                        newCanvas.width = 299;
+                        newCanvas.height = 253;
+                        newCanvas.classList.add("chartjs-render-monitor");
+
+                        // Anda dapat menambahkan atribut atau gaya tambahan jika diperlukan
+
+                        // Menambahkan elemen canvas yang baru ke elemen saat ini dalam iterasi
+                        containerElements[i].appendChild(newCanvas);
+                    }
+                    Chart.defaults.global.defaultFontFamily = 'Nunito', '-apple-system,system-ui,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif';
+                    Chart.defaults.global.defaultFontColor = '#858796';
+
+                    var pieChart = document.getElementById("myPieChart");
+                    var myPieChart = new Chart(pieChart, {
+                        type: 'doughnut',
+                        data: {
+                            labels: response.arrayCategory,
+                            datasets: [{
+                                data: response.arrayCashoutCategory,
+                                backgroundColor: response.backgroundColor,
+                                hoverBackgroundColor: response.hoverColor,
+                                hoverBorderColor: "rgba(234, 236, 244, 1)",
+                            }],
+                        },
+                        options: {
+                            maintainAspectRatio: false,
+                            tooltips: {
+                                backgroundColor: "rgb(255,255,255)",
+                                bodyFontColor: "#858796",
+                                borderColor: '#dddfeb',
+                                borderWidth: 1,
+                                xPadding: 15,
+                                yPadding: 15,
+                                displayColors: false,
+                                caretPadding: 10,
+                            },
+                            legend: {
+                                display: false
+                            },
+                            cutoutPercentage: 80,
+                        },
+                    });
+
+                    var pieCaption = document.getElementById('caption_pie');
+                    pieCaption.innerHTML = response.message;
+                    var textTotal = document.getElementById('text-total');
+                    textTotal.innerHTML = 'Total Cash-out : Rp. ' + response.total_cashout;
+
+                }
+            });
+
+            $('#btn_satu_bulan_cashout').on('click', function() {
+                $("#btn_satu_bulan_cashout").addClass("active");
+                $("#btn_tiga_bulan_cashout").removeClass("active");
+                $("#btn_custom_bulan_cashout").removeClass("active");
+                $("#value_pick").val("1 Month");
+
+                var valuePick = $("#value_pick").val();
+
+                $.ajax({
+                    url: "<?php echo base_url('financial/filteredCashoutGraphic/') ?>",
+                    type: "GET",
+                    data: {
+                        pickMonth: valuePick
+                    },
+                    dataType: "json",
+                    success: function(response) {
+                        var element = document.getElementById("myPieChart");
+                        if (element) {
+                            element.parentNode.removeChild(element);
+                        }
+                        var containerElements = document.getElementsByClassName("chart-pie"); // Gantilah "container" dengan ID elemen yang sesuai
+                        for (var i = 0; i < containerElements.length; i++) {
+                            var newCanvas = document.createElement("canvas");
+                            newCanvas.id = "myPieChart";
+                            newCanvas.width = 299;
+                            newCanvas.height = 253;
+                            newCanvas.classList.add("chartjs-render-monitor");
+
+                            // Anda dapat menambahkan atribut atau gaya tambahan jika diperlukan
+
+                            // Menambahkan elemen canvas yang baru ke elemen saat ini dalam iterasi
+                            containerElements[i].appendChild(newCanvas);
+                        }
+                        Chart.defaults.global.defaultFontFamily = 'Nunito', '-apple-system,system-ui,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif';
+                        Chart.defaults.global.defaultFontColor = '#858796';
+
+                        var pieChart = document.getElementById("myPieChart");
+                        var myPieChart = new Chart(pieChart, {
+                            type: 'doughnut',
+                            data: {
+                                labels: response.arrayCategory,
+                                datasets: [{
+                                    data: response.arrayCashoutCategory,
+                                    backgroundColor: response.backgroundColor,
+                                    hoverBackgroundColor: response.hoverColor,
+                                    hoverBorderColor: "rgba(234, 236, 244, 1)",
+                                }],
+                            },
+                            options: {
+                                maintainAspectRatio: false,
+                                tooltips: {
+                                    backgroundColor: "rgb(255,255,255)",
+                                    bodyFontColor: "#858796",
+                                    borderColor: '#dddfeb',
+                                    borderWidth: 1,
+                                    xPadding: 15,
+                                    yPadding: 15,
+                                    displayColors: false,
+                                    caretPadding: 10,
+                                },
+                                legend: {
+                                    display: false
+                                },
+                                cutoutPercentage: 80,
+                            },
+                        });
+
+                        var pieCaption = document.getElementById('caption_pie');
+                        pieCaption.innerHTML = response.message;
+                        var textTotal = document.getElementById('text-total');
+                        textTotal.innerHTML = 'Total Cash-out : Rp. ' + response.total_cashout;
+
+                    }
+                });
+            })
+            $('#btn_tiga_bulan_cashout').on('click', function() {
+                $("#btn_satu_bulan_cashout").removeClass("active");
+                $("#btn_tiga_bulan_cashout").addClass("active");
+                $("#btn_custom_bulan_cashout").removeClass("active");
+                $("#value_pick").val("3 Month");
+
+                var valuePick = $("#value_pick").val();
+
+                $.ajax({
+                    url: "<?php echo base_url('financial/filteredCashoutGraphic/') ?>",
+                    type: "GET",
+                    data: {
+                        pickMonth: valuePick
+                    },
+                    dataType: "json",
+                    success: function(response) {
+                        var element = document.getElementById("myPieChart");
+                        if (element) {
+                            element.parentNode.removeChild(element);
+                        }
+                        var containerElements = document.getElementsByClassName("chart-pie"); // Gantilah "container" dengan ID elemen yang sesuai
+                        for (var i = 0; i < containerElements.length; i++) {
+                            var newCanvas = document.createElement("canvas");
+                            newCanvas.id = "myPieChart";
+                            newCanvas.width = 299;
+                            newCanvas.height = 253;
+                            newCanvas.classList.add("chartjs-render-monitor");
+
+                            // Anda dapat menambahkan atribut atau gaya tambahan jika diperlukan
+
+                            // Menambahkan elemen canvas yang baru ke elemen saat ini dalam iterasi
+                            containerElements[i].appendChild(newCanvas);
+                        }
+                        Chart.defaults.global.defaultFontFamily = 'Nunito', '-apple-system,system-ui,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif';
+                        Chart.defaults.global.defaultFontColor = '#858796';
+
+                        var pieChart = document.getElementById("myPieChart");
+                        var myPieChart = new Chart(pieChart, {
+                            type: 'doughnut',
+                            data: {
+                                labels: response.arrayCategory,
+                                datasets: [{
+                                    data: response.arrayCashoutCategory,
+                                    backgroundColor: response.backgroundColor,
+                                    hoverBackgroundColor: response.hoverColor,
+                                    hoverBorderColor: "rgba(234, 236, 244, 1)",
+                                }],
+                            },
+                            options: {
+                                maintainAspectRatio: false,
+                                tooltips: {
+                                    backgroundColor: "rgb(255,255,255)",
+                                    bodyFontColor: "#858796",
+                                    borderColor: '#dddfeb',
+                                    borderWidth: 1,
+                                    xPadding: 15,
+                                    yPadding: 15,
+                                    displayColors: false,
+                                    caretPadding: 10,
+                                },
+                                legend: {
+                                    display: false
+                                },
+                                cutoutPercentage: 80,
+                            },
+                        });
+
+                        var pieCaption = document.getElementById('caption_pie');
+                        pieCaption.innerHTML = response.message;
+                        var textTotal = document.getElementById('text-total');
+                        textTotal.innerHTML = 'Total Cash-out : Rp. ' + response.total_cashout;
+
+                    }
+                });
+            })
+            $('#btn_simpan_pick_cashout').on('click', function() {
+                $("#btn_satu_bulan_cashout").removeClass("active");
+                $("#btn_tiga_bulan_cashout").removeClass("active");
+                $("#btn_custom_bulan_cashout").addClass("active");
+                $("#value_pick").val("custom_date");
+
+                var valuePick = $("#value_pick").val();
+                var startDate = $('#startDate').val();
+                var endDate = $('#endDate').val();
+
+                if (startDate === '' || endDate === '') {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Oops...',
+                        text: 'Please input Field!',
+                    })
+                    return false;
+                }
+                var startDateObj = new Date(startDate);
+                var endDateObj = new Date(endDate);
+
+                if (startDateObj > endDateObj) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Oops...',
+                        text: 'Start Date cannot be greater than end date!',
+                    })
+                    return false;
+                }
+
+                $.ajax({
+                    url: "<?php echo base_url('financial/filteredCashoutGraphic/') ?>",
+                    type: "GET",
+                    data: {
+                        pickMonth: valuePick,
+                        startDate: startDate,
+                        endDate: endDate
+                    },
+                    dataType: "json",
+                    success: function(response) {
+                        var element = document.getElementById("myPieChart");
+                        if (element) {
+                            element.parentNode.removeChild(element);
+                        }
+                        var containerElements = document.getElementsByClassName("chart-pie"); // Gantilah "container" dengan ID elemen yang sesuai
+                        for (var i = 0; i < containerElements.length; i++) {
+                            var newCanvas = document.createElement("canvas");
+                            newCanvas.id = "myPieChart";
+                            newCanvas.width = 299;
+                            newCanvas.height = 253;
+                            newCanvas.classList.add("chartjs-render-monitor");
+
+                            // Anda dapat menambahkan atribut atau gaya tambahan jika diperlukan
+
+                            // Menambahkan elemen canvas yang baru ke elemen saat ini dalam iterasi
+                            containerElements[i].appendChild(newCanvas);
+                        }
+                        Chart.defaults.global.defaultFontFamily = 'Nunito', '-apple-system,system-ui,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif';
+                        Chart.defaults.global.defaultFontColor = '#858796';
+
+                        var pieChart = document.getElementById("myPieChart");
+                        var myPieChart = new Chart(pieChart, {
+                            type: 'doughnut',
+                            data: {
+                                labels: response.arrayCategory,
+                                datasets: [{
+                                    data: response.arrayCashoutCategory,
+                                    backgroundColor: response.backgroundColor,
+                                    hoverBackgroundColor: response.hoverColor,
+                                    hoverBorderColor: "rgba(234, 236, 244, 1)",
+                                }],
+                            },
+                            options: {
+                                maintainAspectRatio: false,
+                                tooltips: {
+                                    backgroundColor: "rgb(255,255,255)",
+                                    bodyFontColor: "#858796",
+                                    borderColor: '#dddfeb',
+                                    borderWidth: 1,
+                                    xPadding: 15,
+                                    yPadding: 15,
+                                    displayColors: false,
+                                    caretPadding: 10,
+                                },
+                                legend: {
+                                    display: false
+                                },
+                                cutoutPercentage: 80,
+                            },
+                        });
+
+                        var pieCaption = document.getElementById('caption_pie');
+                        pieCaption.innerHTML = response.message;
+                        var textTotal = document.getElementById('text-total');
+                        textTotal.innerHTML = 'Total Cash-out : Rp. ' + response.total_cashout;
+
+                    }
+                });
+            })
+        }
+
+
+        defaultHtmlChartPie();
+        /** end of chart default */
+
         $('#btn_health').on('click', function() {
+            $("#filter_date").empty();
+            $("#filter_date").append('<input type="hidden" id="value_pick" value="1 Month"><div class="btn btn-light active" id="btn_satu_bulan"><p class="m-0 font-weight-bold text-primary">1 Month</p></div><div class="btn btn-light ml-1 " id="btn_tiga_bulan" onclick=""><p class="m-0 font-weight-bold text-primary">3 Months</p></div><div class="btn btn-light ml-1 " id="btn_custom_bulan" onclick="" data-toggle="modal" data-target="#datePickerModal"><p class="m-0 font-weight-bold text-primary fa fa-calendar"></p></div>')
+            $("#submit_pick").empty();
+            $("#submit_pick").append('<button type="button" class="btn btn-secondary" data-dismiss="modal">Tutup</button><button type="button" class="btn btn-primary" id="btn_simpan_pick" data-dismiss="modal">Simpan</button>');
+            $('#value-filtered-chart').val('Cashflow Health')
             defaultHtmlChartPie()
         })
 
         $('#btn_cashinflow').on('click', function() {
+            $("#filter_date").empty();
+            $("#filter_date").append('<input type="hidden" id="value_pick" value="1 Month"><div class="btn btn-light active" id="btn_satu_bulan_cashin"><p class="m-0 font-weight-bold text-primary">1 Month</p></div><div class="btn btn-light ml-1 " id="btn_tiga_bulan_cashin" onclick=""><p class="m-0 font-weight-bold text-primary">3 Months</p></div><div class="btn btn-light ml-1 " id="btn_custom_bulan_cashin" onclick="" data-toggle="modal" data-target="#datePickerModal"><p class="m-0 font-weight-bold text-primary fa fa-calendar"></p></div>')
+            $("#submit_pick").empty();
+            $("#submit_pick").append('<button type="button" class="btn btn-secondary" data-dismiss="modal">Tutup</button><button type="button" class="btn btn-primary" id="btn_simpan_pick_cashin" data-dismiss="modal">Simpan</button>');
+            $('#value-filtered-chart').val('Cash-in Flow')
             htmlChartCashin()
         })
+
+        $('#btn_cashoutflow').on('click', function() {
+            $("#filter_date").empty();
+            $("#filter_date").append('<input type="hidden" id="value_pick" value="1 Month"><div class="btn btn-light active" id="btn_satu_bulan_cashout"><p class="m-0 font-weight-bold text-primary">1 Month</p></div><div class="btn btn-light ml-1 " id="btn_tiga_bulan_cashout" onclick=""><p class="m-0 font-weight-bold text-primary">3 Months</p></div><div class="btn btn-light ml-1 " id="btn_custom_bulan_cashout" onclick="" data-toggle="modal" data-target="#datePickerModal"><p class="m-0 font-weight-bold text-primary fa fa-calendar"></p></div>')
+            $("#submit_pick").empty();
+            $("#submit_pick").append('<button type="button" class="btn btn-secondary" data-dismiss="modal">Tutup</button><button type="button" class="btn btn-primary" id="btn_simpan_pick_cashout" data-dismiss="modal">Simpan</button>');
+            $('#value-filtered-chart').val('Cash-out Flow');
+            htmlChartCashout();
+        })
+    });
+
+    $(document).ready(function() {
+        $('#dataTable').DataTable({
+            "pageLength": 10,
+            "initComplete": function() {
+                // Menambahkan kelas CSS ke elemen pencarian
+                var searchInput = $(this).closest('.dataTables_wrapper').find('input[type="search"]');
+                searchInput.addClass('custom-search'); // Gantilah 'custom-search' dengan kelas CSS yang Anda inginkan
+                var filterDiv = $(this).closest('.dataTables_wrapper').find('.dataTables_length');
+                filterDiv.addClass('custom-filter');
+            }
+        });
     });
 </script>
 </body>
