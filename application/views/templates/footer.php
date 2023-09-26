@@ -390,6 +390,7 @@
                     }
                 }
             });
+
             document.getElementById('caption_myAreaChart').innerHTML = t.message_cashin;
         }
     });
@@ -785,7 +786,11 @@
                     });
 
                     var pieCaption = document.getElementById('caption_pie');
-                    pieCaption.innerHTML = 'Kondisi keuanganmu sejak ' + '<b>' + teksTanggal + '</b>' + ' sampai dengan hari ini. ' + '<b>' + response.message + '</b>';
+                    if (response.total_cashin !== 0) {
+                        pieCaption.innerHTML = 'Kondisi keuanganmu sejak ' + '<b>' + teksTanggal + '</b>' + ' sampai dengan hari ini. ' + '<b>' + response.message + '</b>';
+                    } else {
+                        pieCaption.innerHTML = 'Belum ada data yang kamu catat.';
+                    }
                     var total_cashin = document.getElementById('text-total');
                     total_cashin.innerText = 'Total : Rp. ' + response.total_cashin;
                 }
@@ -877,7 +882,11 @@
                         });
 
                         var pieCaption = document.getElementById('caption_pie');
-                        pieCaption.innerHTML = 'Kondisi keuanganmu sejak ' + '<b>' + teksTanggal + '</b>' + ' sampai dengan hari ini. ' + '<b>' + response.message + '</b>';
+                        if (response.total_cashin !== 0) {
+                            pieCaption.innerHTML = 'Kondisi keuanganmu sejak ' + '<b>' + teksTanggal + '</b>' + ' sampai dengan hari ini. ' + '<b>' + response.message + '</b>';
+                        } else {
+                            pieCaption.innerHTML = 'Belum ada data yang kamu catat.';
+                        }
                         var total_cashin = document.getElementById('text-total');
                         total_cashin.innerText = 'Total : Rp. ' + response.total_cashin;
                     }
@@ -970,7 +979,11 @@
                         });
 
                         var pieCaption = document.getElementById('caption_pie');
-                        pieCaption.innerHTML = 'Kondisi keuanganmu sejak ' + '<b>' + teksTanggal + '</b>' + ' sampai dengan hari ini. ' + '<b>' + response.message + '</b>';
+                        if (response.total_cashin !== 0) {
+                            pieCaption.innerHTML = 'Kondisi keuanganmu sejak ' + '<b>' + teksTanggal + '</b>' + ' sampai dengan hari ini. ' + '<b>' + response.message + '</b>';
+                        } else {
+                            pieCaption.innerHTML = 'Belum ada data yang kamu catat.';
+                        }
                         var total_cashin = document.getElementById('text-total');
                         total_cashin.innerText = 'Total : Rp. ' + response.total_cashin;
                     }
@@ -1087,7 +1100,11 @@
                         });
 
                         var pieCaption = document.getElementById('caption_pie');
-                        pieCaption.innerHTML = 'Kondisi keuanganmu sejak ' + '<b>' + teksTanggal + '</b>' + ' sampai dengan hari ini. ' + '<b>' + response.message + '</b>';
+                        if (response.total_cashin !== 0) {
+                            pieCaption.innerHTML = 'Kondisi keuanganmu sejak ' + '<b>' + teksTanggal + '</b>' + ' sampai dengan hari ini. ' + '<b>' + response.message + '</b>';
+                        } else {
+                            pieCaption.innerHTML = 'Belum ada data yang kamu catat.';
+                        }
                         var total_cashin = document.getElementById('text-total');
                         total_cashin.innerText = 'Total : Rp. ' + response.total_cashin;
                     }

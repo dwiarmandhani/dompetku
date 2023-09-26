@@ -81,7 +81,12 @@ class Financial extends CI_Controller
 
         $monthWithMaxIncome = $monthNames[$indexOfMaxIncome];
         $hasilData['monthlyTotal_cashin'] = $monthlyTotal;
-        $hasilData['message_cashin'] = 'Penghasilan terbesar Anda ada di bulan ' . '<b>' . $monthWithMaxIncome . '</b>';
+
+        if ($cashin === null) {
+            $hasilData['message_cashin'] = 'Penghasilan terbesar Anda ada di bulan ' . '<b>' . $monthWithMaxIncome . '</b>';
+        } else {
+            $hasilData['message_cashin'] = 'Belum ada data yang kamu catat. Silahkan catat keuanganmu...';
+        }
         /** end of cashin summary grafik */
 
         /** cashout summary grafik */
@@ -108,8 +113,12 @@ class Financial extends CI_Controller
         $monthWithMaxOutcome = $monthNames[$indexOfMaxOutcome];
 
         $hasilData['monthlyTotal_cashout'] = $monthlyTotalCashout;
-        $hasilData['message_cashout'] = 'Pengeluaran terbesarmu ada di bulan ' . '<b>' . $monthWithMaxOutcome . '</b>';
 
+        if ($cashout === null) {
+            $hasilData['message_cashout'] = 'Pengeluaran terbesarmu ada di bulan ' . '<b>' . $monthWithMaxOutcome . '</b>';
+        } else {
+            $hasilData['message_cashout'] = 'Belum ada data yang kamu catat. Silahkan catat keuanganmu!';
+        }
         /** end of cashout summary grafik */
 
         echo json_encode($hasilData);
@@ -274,6 +283,7 @@ class Financial extends CI_Controller
             $totalCashout = $this->calculateTotalForDateRange($cashout, $startDateOne, $endDateOne);
             $selisihCash = floatval($totalCashin) - floatval($totalCashout);
             // Menentukan pesan berdasarkan perbandingan
+
             if ($totalCashout > 0.5 * $totalCashin) {
                 $message = "Status keuangan Anda buruk";
             } else {
@@ -382,6 +392,11 @@ class Financial extends CI_Controller
             }
             $generateColor = $this->generateCategoryColor($resultArrayCategory);
 
+            if ($totalCashin === 0) {
+                $message = 'Belum ada data yang kamu catat.';
+            } else {
+                $message = $arrayCashin['highestIncomeCategory'] . ' menjadi penghasilan terbesarmu, dengan nilai Rp. ' . $arrayCashin['highestIncomeAmount'] . ' , semangat kerjanya kawan!';
+            }
             $result = [
                 'start_date' => $startDateOne,
                 'end_date' => $endDateOne,
@@ -392,7 +407,7 @@ class Financial extends CI_Controller
                 'highestIncomeAmount' => $arrayCashin['highestIncomeAmount'],
                 'backgroundColor' => $generateColor['backgroundColor'],
                 'hoverColor' => $generateColor['hoverColor'],
-                'message' => $arrayCashin['highestIncomeCategory'] . ' menjadi penghasilan terbesarmu, dengan nilai Rp. ' . $arrayCashin['highestIncomeAmount'] . ' , semangat kerjanya kawan!',
+                'message' => $message,
             ];
         } else if ($pilihWaktu === '3 Month') {
             $endDateOne = date('Y-m-d'); // Tanggal saat ini
@@ -426,6 +441,11 @@ class Financial extends CI_Controller
             }
             $generateColor = $this->generateCategoryColor($resultArrayCategory);
 
+            if ($totalCashin === 0) {
+                $message = 'Belum ada data yang kamu catat.';
+            } else {
+                $message = $arrayCashin['highestIncomeCategory'] . ' menjadi penghasilan terbesarmu, dengan nilai Rp. ' . $arrayCashin['highestIncomeAmount'] . ' , semangat kerjanya kawan!';
+            }
             $result = [
                 'start_date' => $startDateOne,
                 'end_date' => $endDateOne,
@@ -436,7 +456,7 @@ class Financial extends CI_Controller
                 'highestIncomeAmount' => $arrayCashin['highestIncomeAmount'],
                 'backgroundColor' => $generateColor['backgroundColor'],
                 'hoverColor' => $generateColor['hoverColor'],
-                'message' => $arrayCashin['highestIncomeCategory'] . ' menjadi penghasilan terbesarmu, dengan nilai Rp. ' . $arrayCashin['highestIncomeAmount'] . ' , semangat kerjanya kawan!',
+                'message' => $message
             ];
         } else if ($pilihWaktu === 'custom_date') {
             $endDateOne = $_GET['endDate'];
@@ -470,6 +490,11 @@ class Financial extends CI_Controller
             }
             $generateColor = $this->generateCategoryColor($resultArrayCategory);
 
+            if ($totalCashin === 0) {
+                $message = 'Belum ada data yang kamu catat.';
+            } else {
+                $message =  $arrayCashin['highestIncomeCategory'] . ' menjadi penghasilan terbesarmu, dengan nilai Rp. ' . $arrayCashin['highestIncomeAmount'] . ' , semangat kerjanya kawan!';
+            }
             $result = [
                 'start_date' => $startDateOne,
                 'end_date' => $endDateOne,
@@ -480,7 +505,7 @@ class Financial extends CI_Controller
                 'highestIncomeAmount' => $arrayCashin['highestIncomeAmount'],
                 'backgroundColor' => $generateColor['backgroundColor'],
                 'hoverColor' => $generateColor['hoverColor'],
-                'message' => $arrayCashin['highestIncomeCategory'] . ' menjadi penghasilan terbesarmu, dengan nilai Rp. ' . $arrayCashin['highestIncomeAmount'] . ' , semangat kerjanya kawan!',
+                'message' => $message
             ];
         }
         echo json_encode($result);
@@ -525,7 +550,11 @@ class Financial extends CI_Controller
                 $resultArrayCashoutCategory[] = strval($total); // Mengonversi total kategori menjadi string
             }
             $generateColor = $this->generateCategoryColor($resultArrayCategory);
-
+            if ($totalCashout === 0) {
+                $message = 'Belum ada data yang kamu catat.';
+            } else {
+                $message = $arrayCashout['highestCategoryCategory'] . ' menjadi pengeluaran terbesarmu, dengan nilai Rp. ' . $arrayCashout['highestCategoryAmount'] . ' , semangat kerjanya kawan!';
+            }
             $result = [
                 'start_date' => $startDateOne,
                 'end_date' => $endDateOne,
@@ -536,7 +565,7 @@ class Financial extends CI_Controller
                 'highestCategoryAmount' => $arrayCashout['highestCategoryAmount'],
                 'backgroundColor' => $generateColor['backgroundColor'],
                 'hoverColor' => $generateColor['hoverColor'],
-                'message' => $arrayCashout['highestCategoryCategory'] . ' menjadi pengeluaran terbesarmu, dengan nilai Rp. ' . $arrayCashout['highestCategoryAmount'] . ' , semangat kerjanya kawan!',
+                'message' => $message
             ];
         } else if ($pilihWaktu === '3 Month') {
             $endDateOne = date('Y-m-d'); // Tanggal saat ini
@@ -570,6 +599,11 @@ class Financial extends CI_Controller
             }
             $generateColor = $this->generateCategoryColor($resultArrayCategory);
 
+            if ($totalCashout === 0) {
+                $message = 'Belum ada data yang kamu catat.';
+            } else {
+                $message =  $arrayCashout['highestCategoryCategory'] . ' menjadi pengeluaran terbesarmu, dengan nilai Rp. ' . $arrayCashout['highestCategoryAmount'] . ' , semangat kerjanya kawan!';
+            }
             $result = [
                 'start_date' => $startDateOne,
                 'end_date' => $endDateOne,
@@ -580,7 +614,7 @@ class Financial extends CI_Controller
                 'highestCategoryAmount' => $arrayCashout['highestCategoryAmount'],
                 'backgroundColor' => $generateColor['backgroundColor'],
                 'hoverColor' => $generateColor['hoverColor'],
-                'message' => $arrayCashout['highestCategoryCategory'] . ' menjadi pengeluaran terbesarmu, dengan nilai Rp. ' . $arrayCashout['highestCategoryAmount'] . ' , semangat kerjanya kawan!',
+                'message' => $message
             ];
         } else if ($pilihWaktu === 'custom_date') {
             $endDateOne = $_GET['endDate'];
@@ -614,6 +648,11 @@ class Financial extends CI_Controller
             }
             $generateColor = $this->generateCategoryColor($resultArrayCategory);
 
+            if ($totalCashout === 0) {
+                $message = 'Belum ada data yang kamu catat.';
+            } else {
+                $message =  $arrayCashout['highestCategoryCategory'] . ' menjadi pengeluaran terbesarmu, dengan nilai Rp. ' . $arrayCashout['highestCategoryAmount'] . ' , semangat kerjanya kawan!';
+            }
             $result = [
                 'start_date' => $startDateOne,
                 'end_date' => $endDateOne,
@@ -624,7 +663,7 @@ class Financial extends CI_Controller
                 'highestCategoryAmount' => $arrayCashout['highestCategoryAmount'],
                 'backgroundColor' => $generateColor['backgroundColor'],
                 'hoverColor' => $generateColor['hoverColor'],
-                'message' => $arrayCashout['highestCategoryCategory'] . ' menjadi pengeluaran terbesarmu, dengan nilai Rp. ' . $arrayCashout['highestCategoryAmount'] . ' , semangat kerjanya kawan!',
+                'message' => $message
             ];
         }
         echo json_encode($result);
